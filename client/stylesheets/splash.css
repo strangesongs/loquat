@@ -1,0 +1,52 @@
+html {
+    font-family: 'EB Garamond', serif;
+}
+
+h1 {
+    display: block;
+    font-size: larger;
+    color: lightcoral;
+}
+
+.splash {
+    width: 35%;
+    border: 2px solid grey;
+    text-align: center;
+    align-items: center;
+    justify-content: center;
+    width: 400px;
+    height: 350px;
+	position: absolute;
+	top:0;
+	bottom: 0;
+	left: 0;
+	right: 0;
+  	
+	margin: auto;
+}
+
+form {
+    text-align: center;
+}
+
+input {
+    padding: 2px;
+    margin-bottom: 10px;
+    margin-left: 4px;
+}
+
+#button {
+    background-color: lightcoral;
+    color: white;
+    padding: 6px;
+    font-family: 'EB Garamond', serif;
+}
+
+button {
+    background-color: lightcoral;
+    color: white;
+    padding: 6px;
+    margin-left: 10px;
+    margin-right: 10px;
+    font-family: 'EB Garamond', serif;
+}

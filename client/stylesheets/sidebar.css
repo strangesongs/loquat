@@ -1,0 +1,50 @@
+html {
+    font-family: 'EB Garamond', serif;
+    color: white;
+}
+
+.sidebar {
+    background-color: grey;
+    float: left;
+    height: 550px;
+}
+
+.saved-pins {
+    margin-top: 10px;
+    margin-bottom: 30px;
+    overflow: auto;
+}
+
+.ready-fruit {
+    margin-top: 10px;
+    margin-bottom: 30px;
+    overflow: auto;
+}
+button {
+    background-color: lightcoral;
+    color: white;
+    padding: 6px;
+    margin: 10px;
+    margin-top: 15px;
+    font-family: 'EB Garamond', serif;
+}
+
+h4 {
+    width: 70%;
+    margin: auto;
+    margin-bottom: 10px;
+}
+
+ul {
+    width: 70%;
+    margin: auto;
+}
+
+li {
+    width: 70%;
+    margin: auto;
+    margin-bottom: 10px;
+}
+
+
+
