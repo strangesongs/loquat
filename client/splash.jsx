@@ -23,12 +23,19 @@ export default class Splash extends Component {
         event.preventDefault();
     }
 
+    randomizer() {
+        return(
+            <div></div>
+        )
+    }
+
     render () {
         return (
             <div className="splash">
                 <h1>welcome to loquat</h1>
                 <img className="splash-photo" src={require("/Users/joshcretella/Desktop/CS45/solo-project/loquat-128.png")} alt={"loquat"}/>
                 <p>sign up to find ripe, lush fruit in your neighborhood</p>
+                <p className="version">Version 0.14</p>
                 <form onSubmit={this.handleSubmit}>
                     <label>
                         username:

@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "webpack serve",
     "build": "webpack",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js"
   },
   "repository": {
     "type": "git",
@@ -21,7 +22,9 @@
   "homepage": "https://github.com/strangesongs/solo-project#readme",
   "dependencies": {
     "express": "^4.17.1",
+    "mapbox-gl": "^2.4.1",
     "mongoose": "^5.11.9",
+    "node": "^16.6.1",
     "node-fetch": "^2.3.0",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
