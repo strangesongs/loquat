@@ -23,13 +23,8 @@ export default class Splash extends Component {
         event.preventDefault();
     }
 
-    randomizer() {
-        return(
-            <div></div>
-        )
-    }
-
     render () {
+        console.log('why');
         return (
             <div className="splash">
                 <h1>welcome to loquat</h1>

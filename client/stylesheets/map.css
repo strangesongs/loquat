@@ -1,6 +1,11 @@
-.map {
-    background-color: lightblue;
+
+
+.leaflet-container {
+    height: 600px;
+    width: 1000px;
+}
+
+#mapid {
     float: right;
-    height: 400px;
-    width: 600px;
+    margin-right: 20px;
 }

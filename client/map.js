@@ -4,6 +4,7 @@ import Sidebar from './sidebar.jsx';
 import Map from './map.jsx';
 
 
+
 render(
   <div>
   <Sidebar />

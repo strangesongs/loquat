@@ -7,7 +7,7 @@ import Map from './map.jsx';
 
 render(
   // <Splash />,
-  <div>
+  <div id="maps">
   <Sidebar />
   <Map />
   </div>,
