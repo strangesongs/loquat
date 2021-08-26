@@ -2,6 +2,7 @@ const express = require('express');
 const app = express();
 const PORT = 3000;
 const path = require('path');
+const mongoose = require('mongoose');
 
 
 // need to write code to access controller page
@@ -11,6 +12,34 @@ console.log(__dirname);
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, './client/index.html'));
 });
+
+app.get('/map', (req, res) => {
+  console.log('received request');
+  res.sendFile(path.resolve(__dirname, './client/map-index.html'));
+  // res.redirect('/map-index.html');
+});
+
+app.get('/map.css', function(req, res) {
+  res.sendFile(path.join(__dirname, './client/map.css'));
+});
+
+app.get('/sidebar.css', function(req, res) {
+  res.sendFile(path.join(__dirname, './client/sidebar.css'));
+});
+
+app.get('/splash.css', function(req, res) {
+  res.sendFile(path.join(__dirname, './client/splash.css'));
+});
+
+
+// app.get('*', function(req, res) {
+//   // if any other requests, send 404.html
+//   res.sendFile(path.join(__dirname, './client/404.html'));
+//   // set charset and content type to header
+//   res.status(404);
+// });
+
+
 
 app.use('/dist', express.static(path.join(__dirname, './dist')))
 

@@ -6,11 +6,12 @@ import Map from './map.jsx';
 
 
 render(
-  // <Splash />,
-  <div id="maps">
-  <Sidebar />
-  <Map />
-  </div>,
+  <Splash />,
+  // <div id="maps">
+  // <Sidebar />
+  // <Map />
+  // </div>,
   document.getElementById('root')
 );
+
 

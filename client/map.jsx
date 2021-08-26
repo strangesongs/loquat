@@ -25,7 +25,7 @@ export default class Map extends Component {
               attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
-            <Marker position={[34.058740, -118.303390]}>
+            <Marker position={[34.058740, -118.303390]} draggable>
               <Popup>
                 A pretty CSS3 popup. <br /> Easily customizable.
               </Popup>

@@ -20,10 +20,6 @@ mongoose.connect(MONGO_URI, {
       savedPins: Object
   })
 
-
-
   const User = mongoose.model('users', userSchema);
 
-  module.exports = {
-      User
-  };
+  module.exports = User;

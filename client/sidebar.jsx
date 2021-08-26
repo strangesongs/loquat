@@ -10,14 +10,30 @@ export default class Sidebar extends React.Component {
             value: ''};
             // take the object of saved pins from database, save it to variable and then update value of app state
 }
+
+    captureValue(e) {
+        
+    }
     render () {
         return (
         <div className="sidebar">
             <div className="top-bar">
-                <button>home</button>
+            <button
+                type="button"
+                onClick={(e) => {
+                e.preventDefault();
+                window.location.href='index.html';}}
+                >home</button>
+           
                 <button>user</button>
                 <button>save map</button>
-                <button>log out</button>
+
+                <button
+                type="button"
+                onClick={(e) => {
+                e.preventDefault();
+                window.location.href='index.html';}}
+                >home</button>
             </div>
 
             <div className="saved-pins">
@@ -46,6 +62,3 @@ export default class Sidebar extends React.Component {
     };
 
 };
-
-// instead of using individual list items, iterate through the array and populate a list item for each item in teh savedpins array / state
-

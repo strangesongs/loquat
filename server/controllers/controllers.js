@@ -1,7 +1,4 @@
-const models = require('../schemas'/schemas);
-const fs = require('fs');
-const path = require('path');
-
+const User = require('../schemas');
 const controller = {};
 
 controller.getUser = (req, res, next) => {
