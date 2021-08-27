@@ -34,8 +34,6 @@ module.exports = {
           }
         }
       },
-
-      { module: { rules: [ { test: /\.jsx?$/, resolve: { extensions: [".js", ".jsx"] }, include: ... } ] }
     ]
   },
   plugins: [

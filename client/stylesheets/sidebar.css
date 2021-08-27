@@ -1,34 +1,60 @@
 html {
     font-family: 'EB Garamond', serif;
-    color: white;
-    width: 100%;
-    height: 100%;
-    margin: none;
-    padding: none;
 }
 
 .sidebar {
-    background-color: grey;
+    background-color: lightgrey;
     float: left;
-    height: 550px;
+    height: 800px;
+    width: 250px;
+    margin: auto;
 }
 
 .saved-pins {
     margin-top: 10px;
-    margin-bottom: 30px;
-    overflow: auto;
-}
+    margin-bottom: 20px;
+    overflow: auto;}
 
 .ready-fruit {
     margin-top: 10px;
-    margin-bottom: 30px;
+    margin-bottom: 20px;
     overflow: auto;
+}
+
+.add-marker {
+    margin-left: 10px;
+    width: 70%;
+    white-space: nowrap;
+}
+
+.add-marker input {
+    font-family: 'EB Garamond', serif;
+    margin-left: 10px;
+    width: 130px;
+}
+
+.add-marker button {
+    padding: 4px;
+}
+
+
+.add-marker h4 {
+    width: 70%;
+    margin: auto;
+}
+
+.copyright {
+    font-size: x-small;
+    margin: auto;
+    width: 70%;
+    text-align: center;
 }
 button {
     background-color: lightcoral;
     color: white;
     padding: 6px;
     margin: 10px;
+    margin-left: 18px;
     margin-top: 15px;
     font-family: 'EB Garamond', serif;
 }
@@ -45,9 +71,10 @@ ul {
 }
 
 li {
-    width: 70%;
     margin: auto;
     margin-bottom: 10px;
+    list-style-type: circle
+
 }
 
 
