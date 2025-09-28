@@ -1,80 +1,164 @@
-html {
+
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
     font-family: 'EB Garamond', serif;
+    background: #fafafa;
 }
 
+.main-layout {
+    position: relative;
+    height: 100vh;
+    width: 100vw;
+    min-width: 320px;
+    min-height: 320px;
+    background: #fafafa;
+}
+
+/* Floating sidebar box anchored to top-left */
 .sidebar {
-    background-color: lightgrey;
-    float: left;
-    height: 800px;
-    width: 250px;
-    margin: auto;
-}
-
-.saved-pins {
-    margin-top: 10px;
-    margin-bottom: 20px;
-    overflow: auto;}
-
-.ready-fruit {
-    margin-top: 10px;
-    margin-bottom: 20px;
-    overflow: auto;
-}
-
-.add-marker {
-    margin-left: 10px;
-    width: 70%;
-    white-space: nowrap;
-}
-
-.add-marker input {
-    font-family: 'EB Garamond', serif;
-    margin-left: 10px;
-    width: 130px;
-}
-
-.add-marker button {
-    padding: 4px;
-}
-
-
-.add-marker h4 {
-    width: 70%;
-    margin: auto;
-}
-
-.copyright {
-    font-size: x-small;
-    margin: auto;
-    width: 70%;
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    background: #d3d3d3;
+    width: 280px;
+    max-height: calc(100vh - 40px);
+    box-sizing: border-box;
+    overflow: hidden;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     text-align: center;
+    box-shadow: 4px 4px 12px rgba(0, 0, 0, 0.2);
+    padding: 12px;
+    z-index: 1000;
 }
+
+/* Top bar with centered vertically stacked buttons */
+.top-bar {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 15px;
+    flex: 0 0 auto;
+    width: 100%;
+}
+
+/* Original lightcoral button styling with pre-Windows 95 shadow */
 button {
     background-color: lightcoral;
     color: white;
-    padding: 6px;
-    margin: 10px;
-    margin-left: 18px;
-    margin-top: 15px;
+    padding: 6px 12px;
+    margin: 3px;
+    margin-top: 6px;
     font-family: 'EB Garamond', serif;
+    font-size: 0.8rem;
+    border: 2px outset lightcoral;
+    cursor: pointer;
+    width: 90%;
+    box-sizing: border-box;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-h4 {
-    width: 70%;
-    margin: auto;
-    margin-bottom: 10px;
+button:active {
+    border: 2px inset lightcoral;
+}
+
+/* Content sections */
+.saved-pins, .ready-fruit {
+    margin-bottom: 12px;
+    flex: 0 0 auto;
+    text-align: center;
+}
+
+.saved-pins h4, .ready-fruit h4 {
+    margin-bottom: 6px;
+    font-size: 0.9rem;
+    color: #c62828;
+}
+
+/* Dropdown header styling */
+.dropdown-header {
+    cursor: pointer;
+    user-select: none;
+}
+
+.dropdown-header:hover {
+    color: #a52a2a;
 }
 
 ul {
-    width: 70%;
-    margin: auto;
+    padding-left: 0;
+    margin: 0;
+    list-style: none;
+    text-align: center;
 }
 
 li {
-    margin: auto;
-    margin-bottom: 10px;
-    list-style-type: circle
+    margin-bottom: 4px;
+    color: #333;
+    font-size: 0.75rem;
+}
 
+/* Add marker section with submit button below input */
+.add-marker {
+    margin-bottom: 15px;
+    flex: 0 0 auto;
+    text-align: center;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.add-marker h4 {
+    margin-bottom: 6px;
+    font-size: 0.9rem;
+    color: #c62828;
+}
+
+.add-marker input {
+    width: 90%;
+    padding: 6px 12px;
+    margin: 3px;
+    margin-bottom: 8px;
+    font-family: 'EB Garamond', serif;
+    font-size: 0.75rem;
+    border: 2px inset lightcoral;
+    background: white;
+    box-sizing: border-box;
+}
+
+.add-marker button {
+    width: 90%;
+    margin-top: 0;
+}
+
+/* Copyright footer - x-small and grey */
+.copyright {
+    font-size: 0.6rem;
+    color: #888;
+    text-align: center;
+    margin-top: auto;
+    padding-top: 10px;
+    flex: 0 0 auto;
+}
+
+.copyright p {
+    margin: 2px 0;
+}
+
+.lil-fruit {
+    width: 24px;
+    height: 24px;
+    margin-top: 4px;
 }
 
 

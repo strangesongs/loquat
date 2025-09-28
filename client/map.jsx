@@ -5,7 +5,6 @@ import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import './stylesheets/map.css';
 import './stylesheets/sidebar.css'
 
-
 export default class Map extends Component {
     constructor(props) {
         super(props);
@@ -17,63 +16,46 @@ export default class Map extends Component {
 }
 
     render () {
-      console.log(this.state.markers)
-      console.log(this.state.fruit[0])
         return (
-            <div id="mapid">
-            <MapContainer center={[34.058740, -118.303390]} zoom={16} scrollWheelZoom={true}>
-            <TileLayer
-              attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            />
-            <Marker position={this.state.markers[0]} draggable>
-              <Popup>
-              {this.state.fruit[0]}
-              </Popup>
+          <div className="map-area" id="mapid">
+            <MapContainer
+              center={[34.058740, -118.303390]}
+              zoom={16}
+              scrollWheelZoom={true}
+              style={{ height: '100%', width: '100%' }}
+            >
+              <TileLayer
+                attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              />
+              <Marker position={this.state.markers[0]} draggable>
+                <Popup>{this.state.fruit[0]}</Popup>
               </Marker>
               <Marker position={this.state.markers[1]} draggable>
-              <Popup>
-              {this.state.fruit[1]}
-              </Popup>
+                <Popup>{this.state.fruit[1]}</Popup>
               </Marker>
               <Marker position={this.state.markers[2]} draggable>
-              <Popup>
-              {this.state.fruit[2]}
-              </Popup>
+                <Popup>{this.state.fruit[2]}</Popup>
               </Marker>
               <Marker position={this.state.markers[3]} draggable>
-              <Popup>
-              {this.state.fruit[3]}
-              </Popup>
+                <Popup>{this.state.fruit[3]}</Popup>
               </Marker>
               <Marker position={this.state.markers[4]} draggable>
-              <Popup>
-              {this.state.fruit[4]}
-              </Popup>
+                <Popup>{this.state.fruit[4]}</Popup>
               </Marker>
               <Marker position={this.state.markers[5]} draggable>
-              <Popup>
-              {this.state.fruit[5]}
-              </Popup>
+                <Popup>{this.state.fruit[5]}</Popup>
               </Marker>
               <Marker position={this.state.markers[6]} draggable>
-              <Popup>
-              {this.state.fruit[6]}
-              </Popup>
+                <Popup>{this.state.fruit[6]}</Popup>
               </Marker>
               <Marker position={this.state.markers[7]} draggable>
-              <Popup>
-              {this.state.fruit[7]}
-              </Popup>
+                <Popup>{this.state.fruit[7]}</Popup>
               </Marker>
               <Marker position={this.state.markers[8]} draggable>
-              <Popup>
-              {this.state.fruit[8]}
-              </Popup>
+                <Popup>{this.state.fruit[8]}</Popup>
               </Marker>
-           
-          
-          </MapContainer>
+            </MapContainer>
           </div>
         )
     };

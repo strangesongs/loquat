@@ -1,32 +1,40 @@
-const User = require('../schemas');
+
+const db = require('../schemas/schemas');
 const controller = {};
 
-controller.getUser = (req, res, next) => {
-    models.User.find({}, (err, result) => {
-        if (err)
-          return console.error(err + "Username and/or password not found!");
-        console.log('result: ',result);
-      });
-      // check database for user information
-        // if found, return in data and move to next middleware function
+// Get user data (or create new user if not found)
+controller.getUser = async (req, res) => {
+  const { userName } = req.body;
+  let user = await db.getUser(userName);
+  if (!user) {
+    user = { userName, savedPins: [] };
+    await db.saveUser(user);
+  }
+  res.json(user);
+};
 
-      next();
-}
+// Simple login: just accept username, no password
+controller.loginUser = async (req, res) => {
+  const { userName } = req.body;
+  let user = await db.getUser(userName);
+  if (!user) {
+    user = { userName, savedPins: [] };
+    await db.saveUser(user);
+  }
+  // In a real app, set a session/cookie here
+  res.json({ success: true, user });
+};
 
-controller.loginUser = (req, res, next) => {
-    // change page to main.js (map page w/sidebars components)
-    // load data into state and populate the map with pins
-  
-    next();
-  };
+// Save pins for user
+controller.saveButton = async (req, res) => {
+  const { userName, pins } = req.body;
+  let user = await db.getUser(userName);
+  if (!user) {
+    user = { userName, savedPins: [] };
+  }
+  user.savedPins = pins;
+  await db.saveUser(user);
+  res.json({ success: true });
+};
 
-controller.saveButton = (req, res, next) => {
-    // write code here
-    // save whatever is reflected in the current state as an object in the database
-    // this will take all of the current active pins, preferrably in an array, and save them back to the databse
-  
-    next();
-  };
-
-
-  module.exports = controller;
+module.exports = controller;

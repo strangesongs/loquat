@@ -1,11 +1,33 @@
 
 
-.leaflet-container {
-    height: 800px;
-    width: 1615px;
+
+
+/* Map area fills entire screen */
+.map-area {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    background: #fff;
+    z-index: 1;
 }
 
-#mapid {
-    float: right;
-    margin-right: 20px;
+/* Leaflet map fills parent */
+.leaflet-container {
+    width: 100% !important;
+    height: 100% !important;
+    min-width: 0;
+    min-height: 0;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(233, 30, 99, 0.08);
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    outline: none;
 }

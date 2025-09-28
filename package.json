@@ -1,11 +1,14 @@
 {
-  "name": "solo-project",
+  "name": "loquat",
   "version": "1.0.0",
-  "description": "solo",
+  "description": "a fruit map of central los angeles",
   "main": "index.js",
   "scripts": {
     "dev": "webpack serve",
     "build": "webpack",
+    "watch": "webpack --watch",
+    "dev:server": "nodemon server.js",
+    "dev:full": "npm run build && npm run dev:server",
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "nodemon server.js"
   },
@@ -14,13 +17,14 @@
     "url": "git+https://github.com/strangesongs/solo-project.git"
   },
   "keywords": [],
-  "author": "j cretella",
+  "author": "josh cretella",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/strangesongs/solo-project/issues"
   },
   "homepage": "https://github.com/strangesongs/solo-project#readme",
   "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.896.0",
     "eslint": "^7.32.0",
     "express": "^4.17.1",
     "leaflet": "^1.7.1",
@@ -45,8 +49,8 @@
     "concurrently": "^5.0.0",
     "cross-env": "^6.0.3",
     "css-loader": "^6.2.0",
-    "file-loader": "^4.0.0",
     "html-webpack-plugin": "^5.3.2",
+    "nodemon": "^3.1.10",
     "prettier": "^2.3.2",
     "style-loader": "^3.2.1",
     "webpack": "^5.51.1",
