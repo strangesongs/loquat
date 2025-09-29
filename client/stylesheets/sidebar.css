@@ -16,7 +16,6 @@ html, body {
     background: #fafafa;
 }
 
-/* Floating sidebar box anchored to top-left */
 .sidebar {
     position: fixed;
     top: 20px;
@@ -37,7 +36,6 @@ html, body {
     z-index: 1000;
 }
 
-/* Top bar with centered vertically stacked buttons */
 .top-bar {
     display: flex;
     flex-direction: column;
@@ -48,7 +46,6 @@ html, body {
     width: 100%;
 }
 
-/* Original lightcoral button styling with pre-Windows 95 shadow */
 button {
     background-color: lightcoral;
     color: white;
@@ -57,6 +54,7 @@ button {
     margin-top: 6px;
     font-family: 'EB Garamond', serif;
     font-size: 0.8rem;
+    font-weight: bold;
     border: 2px outset lightcoral;
     cursor: pointer;
     width: 90%;
@@ -71,7 +69,6 @@ button:active {
     border: 2px inset lightcoral;
 }
 
-/* Content sections */
 .saved-pins, .ready-fruit {
     margin-bottom: 12px;
     flex: 0 0 auto;
@@ -84,7 +81,6 @@ button:active {
     color: #c62828;
 }
 
-/* Dropdown header styling */
 .dropdown-header {
     cursor: pointer;
     user-select: none;
@@ -107,7 +103,6 @@ li {
     font-size: 0.75rem;
 }
 
-/* Add marker section with submit button below input */
 .add-marker {
     margin-bottom: 15px;
     flex: 0 0 auto;
@@ -126,14 +121,16 @@ li {
 
 .add-marker input {
     width: 90%;
-    padding: 6px 12px;
+    padding: 4px 8px;
     margin: 3px;
     margin-bottom: 8px;
     font-family: 'EB Garamond', serif;
-    font-size: 0.75rem;
-    border: 2px inset lightcoral;
+    font-size: 0.8rem;
+    font-weight: bold;
+    border: 2px inset #d3d3d3;
     background: white;
     box-sizing: border-box;
+    border-radius: 0;
 }
 
 .add-marker button {
@@ -141,24 +138,151 @@ li {
     margin-top: 0;
 }
 
-/* Copyright footer - x-small and grey */
-.copyright {
+.header-section {
     font-size: 0.6rem;
     color: #888;
     text-align: center;
-    margin-top: auto;
-    padding-top: 10px;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
     flex: 0 0 auto;
+    border-bottom: 1px solid #e0e0e0;
 }
 
-.copyright p {
+.header-section p {
     margin: 2px 0;
+}
+
+.header-section p:first-child {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: white;
+}
+
+.header-section p:nth-child(2) {
+    font-size: 0.9rem;
+}
+
+.bottom-section {
+    margin-top: auto;
+    padding-top: 15px;
+    flex: 0 0 auto;
+    width: 100%;
+    display: flex;
+    justify-content: center;
 }
 
 .lil-fruit {
     width: 24px;
     height: 24px;
     margin-top: 4px;
+}
+
+.form-section {
+    margin-bottom: 10px;
+    width: 90%;
+    text-align: center;
+}
+
+.form-section label {
+    display: block;
+    font-size: 0.9rem;
+    color: #c62828;
+    margin-bottom: 6px;
+    font-weight: bold;
+    text-align: center;
+}
+
+
+
+.location-display {
+    background-color: #d3d3d3;
+    padding: 4px 8px;
+    margin-top: 4px;
+    border: 2px inset #d3d3d3;
+    border-radius: 0;
+    font-size: 0.8rem;
+    color: #333;
+    font-weight: bold;
+    font-family: 'EB Garamond', serif;
+}
+
+.notes-preview {
+    background-color: #f5f5f5;
+    padding: 4px 8px;
+    margin-top: 4px;
+    border-radius: 4px;
+    font-size: 0.65rem;
+    color: #666;
+}
+
+.submit-pin-btn {
+    margin-top: 10px;
+    background-color: lightcoral;
+    color: white;
+    border: 2px outset lightcoral;
+}
+
+.submit-pin-btn:active {
+    border: 2px inset lightcoral;
+}
+
+.submit-pin-btn:disabled {
+    background-color: lightcoral;
+    cursor: not-allowed;
+    border: 2px outset lightcoral;
+}
+
+.notes-popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.notes-popup {
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
+    border: 2px solid #ccc;
+    max-width: 400px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.notes-popup h4 {
+    margin-top: 0;
+    color: #c62828;
+    font-size: 0.9rem;
+}
+
+.notes-popup textarea {
+    width: 100%;
+    min-height: 120px;
+    padding: 8px;
+    border: 2px inset lightcoral;
+    font-family: 'EB Garamond', serif;
+    font-size: 0.8rem;
+    resize: vertical;
+    box-sizing: border-box;
+}
+
+.popup-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+    justify-content: flex-end;
+}
+
+.popup-buttons button {
+    width: auto;
+    min-width: 60px;
 }
 
 
