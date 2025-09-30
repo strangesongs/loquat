@@ -83,7 +83,6 @@ class Map extends Component {
                                             <div className="pin-popup">
                                                 <div className="popup-header">
                                                     <h3 className="fruit-title">{pin.fruitTypeDisplay.toLowerCase()}</h3>
-                                                    <span className="pin-id">id: {pin.pinId.slice(-8)}</span>
                                                 </div>
                                                 
                                                 <div className="popup-content">
@@ -115,27 +114,7 @@ class Map extends Component {
                                                                 minute: '2-digit'
                                                             })}</span>
                                                         </div>
-                                                        
-                                                        <div className="metadata-item">
-                                                            <strong>status:</strong>
-                                                            <span className={`status-badge ${pin.status}`}>
-                                                                {pin.status || 'active'}
-                                                            </span>
-                                                        </div>
                                                     </div>
-                                                </div>
-                                                
-                                                <div className="popup-footer">
-                                                    <button 
-                                                        className="popup-action-btn"
-                                                        onClick={() => {
-                                                            const coords = `${pin.coordinates.lat},${pin.coordinates.lng}`;
-                                                            const url = `https://maps.google.com/?q=${coords}`;
-                                                            window.open(url, '_blank');
-                                                        }}
-                                                    >
-                                                        view in maps
-                                                    </button>
                                                 </div>
                                             </div>
                                         </Popup>

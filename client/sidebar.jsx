@@ -12,7 +12,7 @@ export default class Sidebar extends React.Component {
             fruitType: '',
             notes: '',
             submitting: false,
-            showNotesPopup: false,
+            showAddFruitPopup: false,
             currentUser: 'anonymous' // TODO: Get from login
         }
     };
@@ -42,9 +42,13 @@ export default class Sidebar extends React.Component {
         this.setState({ [field]: value });
     };
 
-    toggleNotesPopup = () => {
+    toggleAddFruitPopup = () => {
         this.setState(prevState => ({
-            showNotesPopup: !prevState.showNotesPopup
+            showAddFruitPopup: !prevState.showAddFruitPopup,
+            // Reset form when opening popup
+            currentLocation: !prevState.showAddFruitPopup ? null : prevState.currentLocation,
+            fruitType: !prevState.showAddFruitPopup ? '' : prevState.fruitType,
+            notes: !prevState.showAddFruitPopup ? '' : prevState.notes
         }));
     };
 
@@ -81,12 +85,12 @@ export default class Sidebar extends React.Component {
 
             if (result.success) {
                 alert('Pin submitted successfully!');
-                // Reset form
+                // Reset form and close popup
                 this.setState({
                     currentLocation: null,
                     fruitType: '',
                     notes: '',
-                    showNotesPopup: false
+                    showAddFruitPopup: false
                 });
                 // Notify parent component to refresh map if callback provided
                 if (this.props.onPinSubmitted) {
@@ -115,115 +119,127 @@ export default class Sidebar extends React.Component {
                 <img className="lil-fruit" src={loquatIcon} alt={"loquat"}/>
             </div>
 
-            <div className="top-bar">
+            {/* Main action buttons */}
+            <div className="action-buttons">
                 <button
                     type="button"
                     onClick={(e) => {
                     e.preventDefault();
                     window.location.href='index.html';}}
+                    className="action-btn"
                     >home</button>
+
+                <button
+                    type="button"
+                    onClick={this.toggleAddFruitPopup}
+                    className="action-btn add-fruit-btn"
+                    >add fruit</button>
+
+                <button
+                    type="button"
+                    onClick={(e) => {
+                    e.preventDefault();
+                    alert('My pins functionality coming soon!');}}
+                    className="action-btn"
+                    >my pins</button>
             </div>
 
-        <div className="add-marker">
-            <h4>add fruit</h4>
-            
-            {/* Location Section */}
-            <div className="form-section">
-                <button 
-                    type="button" 
-                    onClick={this.getCurrentLocation}
-                    className="location-btn"
-                    disabled={this.state.submitting}
-                >
-                    get current location
-                </button>
-                {this.state.currentLocation && (
-                    <div className="location-display">
-                        <p>
-                            location: {this.state.currentLocation.lat.toFixed(6)}, {this.state.currentLocation.lng.toFixed(6)}
-                        </p>
-                    </div>
-                )}
-            </div>
+            {/* Add Fruit Popup */}
+            {this.state.showAddFruitPopup && (
+                <div className="add-fruit-popup-overlay">
+                    <div className="add-fruit-popup">
+                        <div className="popup-header">
+                            <h4>Add Fruit Tree</h4>
+                            <button 
+                                className="close-btn"
+                                onClick={this.toggleAddFruitPopup}
+                                disabled={this.state.submitting}
+                            >
+                                ×
+                            </button>
+                        </div>
 
-            {/* Fruit Type Section */}
-            <div className="form-section">
-                <label htmlFor="fruit-type">type:</label>
-                <input 
-                    type="text" 
-                    id="fruit-type"
-                    value={this.state.fruitType}
-                    onChange={(e) => this.handleInputChange('fruitType', e.target.value)}
-                    placeholder="e.g., lemon, orange, avocado"
-                    maxLength="50"
-                    disabled={this.state.submitting}
-                />
-            </div>
+                        <div className="popup-content">
+                            {/* Location Section */}
+                            <div className="popup-section">
+                                <label>Location:</label>
+                                <button 
+                                    type="button" 
+                                    onClick={this.getCurrentLocation}
+                                    className="location-btn"
+                                    disabled={this.state.submitting}
+                                >
+                                    get current location
+                                </button>
+                                {this.state.currentLocation && (
+                                    <div className="location-display">
+                                        <small>
+                                            {this.state.currentLocation.lat.toFixed(6)}, {this.state.currentLocation.lng.toFixed(6)}
+                                        </small>
+                                    </div>
+                                )}
+                            </div>
 
-            {/* Notes Section */}
-            <div className="form-section">
-                <label htmlFor="notes">notes:</label>
-                <button 
-                    type="button" 
-                    onClick={this.toggleNotesPopup}
-                    className="notes-toggle-btn"
-                    disabled={this.state.submitting}
-                >
-                    {this.state.notes ? 'edit notes' : 'add notes'}
-                </button>
-                {this.state.notes && (
-                    <div className="notes-preview">
-                        <small>{this.state.notes.substring(0, 50)}{this.state.notes.length > 50 ? '...' : ''}</small>
-                    </div>
-                )}
-            </div>
+                            {/* Fruit Type Section */}
+                            <div className="popup-section">
+                                <label htmlFor="popup-fruit-type">Fruit or Tree Type:</label>
+                                <input 
+                                    type="text" 
+                                    id="popup-fruit-type"
+                                    value={this.state.fruitType}
+                                    onChange={(e) => this.handleInputChange('fruitType', e.target.value)}
+                                    placeholder="e.g., lemon, orange, avocado"
+                                    maxLength="50"
+                                    disabled={this.state.submitting}
+                                />
+                            </div>
 
-            {/* Submit Button */}
-            <button 
-                type="submit" 
-                onClick={this.submitPin}
-                disabled={this.state.submitting || !this.state.currentLocation || !this.state.fruitType.trim()}
-                className="submit-pin-btn"
-            >
-                {this.state.submitting ? 'submitting...' : 'submit pin'}
-            </button>
-        </div>
+                            {/* Notes Section */}
+                            <div className="popup-section">
+                                <label htmlFor="popup-notes">Notes (optional):</label>
+                                <textarea
+                                    id="popup-notes"
+                                    value={this.state.notes}
+                                    onChange={(e) => this.handleInputChange('notes', e.target.value)}
+                                    placeholder="Add details about this fruit tree location... (up to 500 words)"
+                                    rows="4"
+                                    maxLength="3000"
+                                    disabled={this.state.submitting}
+                                />
+                            </div>
+                        </div>
 
-        {/* Notes Popup */}
-        {this.state.showNotesPopup && (
-            <div className="notes-popup-overlay">
-                <div className="notes-popup">
-                    <h4>Add Notes (up to 500 words)</h4>
-                    <textarea
-                        value={this.state.notes}
-                        onChange={(e) => this.handleInputChange('notes', e.target.value)}
-                        placeholder="Add details about this fruit tree location..."
-                        rows="6"
-                        maxLength="3000" // Rough character limit for 500 words
-                    />
-                    <div className="popup-buttons">
-                        <button onClick={this.toggleNotesPopup}>save</button>
-                        <button 
-                            onClick={() => {
-                                this.setState({ notes: '', showNotesPopup: false });
-                            }}
-                        >
-                            clear
-                        </button>
+                        <div className="popup-footer">
+                            <button 
+                                type="button"
+                                onClick={this.toggleAddFruitPopup}
+                                disabled={this.state.submitting}
+                                className="cancel-btn"
+                            >
+                                Cancel
+                            </button>
+                            <button 
+                                type="submit" 
+                                onClick={this.submitPin}
+                                disabled={this.state.submitting || !this.state.currentLocation || !this.state.fruitType.trim()}
+                                className="submit-btn"
+                            >
+                                {this.state.submitting ? 'Submitting...' : 'Submit Pin'}
+                            </button>
+                        </div>
                     </div>
                 </div>
-            </div>
-        )}
+            )}
 
-        {/* Logout button at bottom */}
-        <div className="bottom-section">
-            <button
-                type="button"
-                onClick={(e) => {
-                e.preventDefault();
-                window.location.href='index.html';}}
-                >logout</button>
-        </div>
+            {/* Logout button at bottom */}
+            <div className="bottom-section">
+                <button
+                    type="button"
+                    onClick={(e) => {
+                    e.preventDefault();
+                    window.location.href='index.html';}}
+                    >logout</button>
+            </div>
         </div>
         )
     };

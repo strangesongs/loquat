@@ -36,17 +36,17 @@ html, body {
     z-index: 1000;
 }
 
-.top-bar {
+.action-buttons {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 6px;
-    margin-bottom: 15px;
+    gap: 8px;
+    margin-bottom: 20px;
     flex: 0 0 auto;
     width: 100%;
 }
 
-button {
+button, .action-btn {
     background-color: lightcoral;
     color: white;
     padding: 6px 12px;
@@ -63,9 +63,25 @@ button {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    transition: background-color 0.1s ease;
 }
 
-button:active {
+button:hover, .action-btn:hover {
+    background-color: #e57373;
+}
+
+button:active, .action-btn:active {
+    border: 2px inset lightcoral;
+}
+
+.add-fruit-btn {
+    background-color: lightcoral;
+    border-color: lightcoral;
+    font-size: 0.8rem;
+    padding: 6px 12px;
+}
+
+.add-fruit-btn:active {
     border: 2px inset lightcoral;
 }
 
@@ -103,40 +119,7 @@ li {
     font-size: 0.75rem;
 }
 
-.add-marker {
-    margin-bottom: 15px;
-    flex: 0 0 auto;
-    text-align: center;
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
 
-.add-marker h4 {
-    margin-bottom: 6px;
-    font-size: 0.9rem;
-    color: #c62828;
-}
-
-.add-marker input {
-    width: 90%;
-    padding: 4px 8px;
-    margin: 3px;
-    margin-bottom: 8px;
-    font-family: 'EB Garamond', serif;
-    font-size: 0.8rem;
-    font-weight: bold;
-    border: 2px inset #d3d3d3;
-    background: white;
-    box-sizing: border-box;
-    border-radius: 0;
-}
-
-.add-marker button {
-    width: 90%;
-    margin-top: 0;
-}
 
 .header-section {
     font-size: 0.6rem;
@@ -177,60 +160,7 @@ li {
     margin-top: 4px;
 }
 
-.form-section {
-    margin-bottom: 10px;
-    width: 90%;
-    text-align: center;
-}
 
-.form-section label {
-    display: block;
-    font-size: 0.9rem;
-    color: #c62828;
-    margin-bottom: 6px;
-    font-weight: bold;
-    text-align: center;
-}
-
-
-
-.location-display {
-    background-color: #d3d3d3;
-    padding: 4px 8px;
-    margin-top: 4px;
-    border: 2px inset #d3d3d3;
-    border-radius: 0;
-    font-size: 0.8rem;
-    color: #333;
-    font-weight: bold;
-    font-family: 'EB Garamond', serif;
-}
-
-.notes-preview {
-    background-color: #f5f5f5;
-    padding: 4px 8px;
-    margin-top: 4px;
-    border-radius: 4px;
-    font-size: 0.65rem;
-    color: #666;
-}
-
-.submit-pin-btn {
-    margin-top: 10px;
-    background-color: lightcoral;
-    color: white;
-    border: 2px outset lightcoral;
-}
-
-.submit-pin-btn:active {
-    border: 2px inset lightcoral;
-}
-
-.submit-pin-btn:disabled {
-    background-color: lightcoral;
-    cursor: not-allowed;
-    border: 2px outset lightcoral;
-}
 
 .notes-popup-overlay {
     position: fixed;
@@ -283,6 +213,178 @@ li {
 .popup-buttons button {
     width: auto;
     min-width: 60px;
+}
+
+
+
+/* Add Fruit Popup Styles */
+.add-fruit-popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.6);
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.add-fruit-popup {
+    background-color: white;
+    padding: 0;
+    border-radius: 8px;
+    border: 2px solid #ccc;
+    max-width: 400px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.popup-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    border-bottom: 1px solid #ddd;
+    background-color: #f5f5f5;
+    border-radius: 6px 6px 0 0;
+}
+
+.popup-header h4 {
+    margin: 0;
+    color: #c62828;
+    font-size: 1rem;
+    font-weight: bold;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #666;
+    padding: 0;
+    width: auto;
+    margin: 0;
+    line-height: 1;
+}
+
+.close-btn:hover {
+    color: #333;
+}
+
+.popup-content {
+    padding: 20px;
+}
+
+.popup-section {
+    margin-bottom: 20px;
+}
+
+.popup-section label {
+    display: block;
+    font-size: 0.9rem;
+    color: #c62828;
+    margin-bottom: 8px;
+    font-weight: bold;
+    text-align: left;
+}
+
+.popup-section input,
+.popup-section textarea {
+    width: 100%;
+    padding: 8px 12px;
+    border: 2px inset #d3d3d3;
+    font-family: 'EB Garamond', serif;
+    font-size: 0.9rem;
+    box-sizing: border-box;
+    border-radius: 0;
+    background: white;
+}
+
+.popup-section textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+.location-btn {
+    background-color: #2196f3;
+    border-color: #2196f3;
+    color: white;
+    padding: 8px 12px;
+    font-size: 0.8rem;
+    width: auto;
+    margin-bottom: 8px;
+}
+
+.location-btn:active {
+    border: 2px inset #2196f3;
+}
+
+.location-display {
+    background-color: #f0f0f0;
+    padding: 8px 12px;
+    border: 2px inset #d3d3d3;
+    border-radius: 0;
+    text-align: left;
+    margin-top: 8px;
+}
+
+.location-display small {
+    font-family: 'EB Garamond', serif;
+    color: #333;
+    font-weight: bold;
+}
+
+.popup-footer {
+    display: flex;
+    gap: 10px;
+    padding: 15px 20px;
+    border-top: 1px solid #ddd;
+    background-color: #f5f5f5;
+    border-radius: 0 0 6px 6px;
+    justify-content: flex-end;
+}
+
+.popup-footer button {
+    width: auto;
+    min-width: 80px;
+    margin: 0;
+}
+
+.cancel-btn {
+    background-color: #666;
+    border-color: #666;
+}
+
+.cancel-btn:hover {
+    background-color: #777;
+}
+
+.cancel-btn:active {
+    border: 2px inset #666;
+}
+
+.submit-btn {
+    background-color: #4caf50;
+    border-color: #4caf50;
+}
+
+.submit-btn:hover {
+    background-color: #66bb6a;
+}
+
+.submit-btn:active {
+    border: 2px inset #4caf50;
+}
+
+.submit-btn:disabled {
+    background-color: #cccccc;
+    border-color: #cccccc;
+    cursor: not-allowed;
 }
 
 

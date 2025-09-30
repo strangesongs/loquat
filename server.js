@@ -27,6 +27,9 @@ app.use((req, res, next) => {
 // Serve static files from dist/ at the root FIRST
 app.use(express.static(path.join(__dirname, 'dist')));
 
+// Serve test files from root directory for development
+app.use('/test', express.static(__dirname));
+
 // Serve the built frontend for root and all non-API routes
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'dist/index.html'));
@@ -42,10 +45,19 @@ app.get('/map', (req, res) => {
   res.redirect('./client/map-index.html');
 });
 
-// API endpoints
-app.post('/user', controllers.loginUser); // login/create user
-app.post('/save', controllers.saveButton); // save pins for user
-app.post('/api/pins', controllers.createPin); // create new pin
-app.get('/api/pins', controllers.getAllPins); // get all pins
+// Authentication endpoints (no auth required)
+app.post('/api/auth/register', controllers.registerUser); // create new user
+app.post('/api/auth/login', controllers.loginUser); // login user
+
+// Protected API endpoints (authentication required)
+app.get('/api/auth/me', controllers.verifyToken, controllers.getCurrentUser); // get current user
+app.post('/api/pins', controllers.verifyToken, controllers.createPin); // create new pin
+app.get('/api/pins', controllers.verifyToken, controllers.getAllPins); // get all pins
+app.get('/api/pins/my', controllers.verifyToken, controllers.getMyPins); // get user's pins
+app.delete('/api/pins/:pinId', controllers.verifyToken, controllers.deletePin); // delete user's pin
+
+// Legacy endpoints (keep for migration)
+app.post('/user', controllers.loginUser); // legacy - will be removed
+app.post('/save', controllers.saveButton); // legacy - will be removed
 
 app.listen(PORT, () => console.log(`Server listening on port: ${PORT}`));

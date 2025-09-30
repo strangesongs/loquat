@@ -7,6 +7,7 @@ import {
   QueryCommand
 } from '@aws-sdk/client-dynamodb';
 import { v4 as uuidv4 } from 'uuid';
+import bcrypt from 'bcrypt';
 
 const REGION = process.env.AWS_REGION || 'us-west-2';
 const USERS_TABLE = process.env.DYNAMODB_TABLE || 'LoquatUsers';
@@ -23,6 +24,41 @@ function generateGeoHash(lat, lng) {
   return `${Math.round(lat * 10000)}_${Math.round(lng * 10000)}`;
 }
 
+// Password validation function
+function validatePassword(password) {
+  if (!password || typeof password !== 'string') {
+    return { valid: false, message: 'Password is required' };
+  }
+  
+  if (password.length < 10) {
+    return { valid: false, message: 'Password must be at least 10 characters long' };
+  }
+  
+  if (!/\d/.test(password)) {
+    return { valid: false, message: 'Password must contain at least one number' };
+  }
+  
+  if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+    return { valid: false, message: 'Password must contain at least one symbol' };
+  }
+  
+  return { valid: true };
+}
+
+// Email validation function  
+function validateEmail(email) {
+  if (!email || typeof email !== 'string') {
+    return { valid: false, message: 'Email is required' };
+  }
+  
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    return { valid: false, message: 'Please enter a valid email address' };
+  }
+  
+  return { valid: true };
+}
+
 // USER FUNCTIONS
 async function getUser(userName) {
   const params = {
@@ -37,6 +73,11 @@ async function getUser(userName) {
     if (!data.Item) return null;
     return {
       userName: data.Item.userName.S,
+      passwordHash: data.Item.passwordHash?.S || null,
+      email: data.Item.email?.S || null,
+      createdAt: data.Item.createdAt?.S || null,
+      lastLogin: data.Item.lastLogin?.S || null,
+      // Keep legacy field for migration
       savedPins: data.Item.savedPins ? JSON.parse(data.Item.savedPins.S) : []
     };
   } catch (err) {
@@ -46,12 +87,22 @@ async function getUser(userName) {
 }
 
 async function saveUser(user) {
+  const item = {
+    userName: { S: user.userName }
+  };
+
+  // Add optional fields if they exist
+  if (user.passwordHash) item.passwordHash = { S: user.passwordHash };
+  if (user.email) item.email = { S: user.email };
+  if (user.createdAt) item.createdAt = { S: user.createdAt };
+  if (user.lastLogin) item.lastLogin = { S: user.lastLogin };
+  
+  // Keep legacy field for migration
+  if (user.savedPins) item.savedPins = { S: JSON.stringify(user.savedPins) };
+
   const params = {
     TableName: USERS_TABLE,
-    Item: {
-      userName: { S: user.userName },
-      savedPins: { S: JSON.stringify(user.savedPins || []) }
-    }
+    Item: item
   };
   
   try {
@@ -173,4 +224,99 @@ async function getPinById(pinId) {
   }
 }
 
-export { getUser, saveUser, createPin, getAllPins, getPinById };
+// Create new user with password hashing
+async function createUser(userData) {
+  const { userName, password, email } = userData;
+  
+  // Validation
+  if (!userName || typeof userName !== 'string' || userName.trim().length < 3) {
+    throw new Error('Username must be at least 3 characters long');
+  }
+  
+  if (!email || typeof email !== 'string') {
+    throw new Error('Email is required');
+  }
+  
+  if (!password || typeof password !== 'string') {
+    throw new Error('Password is required');
+  }
+  
+  // Validate email format
+  const emailValidation = validateEmail(email);
+  if (!emailValidation.valid) {
+    throw new Error(emailValidation.message);
+  }
+  
+  // Validate password strength
+  const passwordValidation = validatePassword(password);
+  if (!passwordValidation.valid) {
+    throw new Error(passwordValidation.message);
+  }
+  
+  // Check if user already exists
+  const existingUser = await getUser(userName.trim());
+  if (existingUser && existingUser.passwordHash) {
+    throw new Error('Username already exists');
+  }
+  
+  // Hash password
+  const saltRounds = 12;
+  const passwordHash = await bcrypt.hash(password, saltRounds);
+  
+  // Create user object
+  const now = new Date().toISOString();
+  const user = {
+    userName: userName.trim(),
+    passwordHash,
+    email: email.trim().toLowerCase(),
+    createdAt: now,
+    lastLogin: now,
+    savedPins: [] // Keep for migration compatibility
+  };
+  
+  const success = await saveUser(user);
+  if (!success) {
+    throw new Error('Failed to create user');
+  }
+  
+  // Return user without password hash
+  const { passwordHash: _, ...safeUser } = user;
+  return safeUser;
+}
+
+// Verify user login
+async function verifyUser(userName, password) {
+  if (!userName || !password) {
+    throw new Error('Username and password are required');
+  }
+  
+  const user = await getUser(userName);
+  if (!user || !user.passwordHash) {
+    throw new Error('Invalid username or password');
+  }
+  
+  const isValidPassword = await bcrypt.compare(password, user.passwordHash);
+  if (!isValidPassword) {
+    throw new Error('Invalid username or password');
+  }
+  
+  // Update last login
+  user.lastLogin = new Date().toISOString();
+  await saveUser(user);
+  
+  // Return user without password hash
+  const { passwordHash: _, ...safeUser } = user;
+  return safeUser;
+}
+
+export { 
+  getUser, 
+  saveUser, 
+  createUser, 
+  verifyUser, 
+  createPin, 
+  getAllPins, 
+  getPinById,
+  validatePassword,
+  validateEmail 
+};
