@@ -68,14 +68,21 @@ function MapFlyTo({ target }) {
 }
 
 // Re-center button — flies back to the user's last known location
-function LocateMeButton({ userLocation, onLocate }) {
-    const map = useMap();
-    if (!userLocation) return null;
+function LocateMeButton({ onLocate, onPreciseLocation }) {
+    if (!navigator.geolocation) return null;
     return (
-        <div className="locate-me-btn" title="Back to my location"
+        <div className="locate-me-btn" title="Go to my location"
             onClick={() => {
-                map.flyTo([userLocation.lat, userLocation.lng], 13, { duration: 1.0 });
                 if (onLocate) onLocate();
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => {
+                        const loc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+                        try { sessionStorage.setItem('ffa_last_location', JSON.stringify(loc)); } catch (e) {}
+                        if (onPreciseLocation) onPreciseLocation(loc);
+                    },
+                    () => { /* user denied or unavailable — silently ignored */ },
+                    { timeout: 8000, maximumAge: 5 * 60 * 1000, enableHighAccuracy: false }
+                );
             }}
         >
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -247,7 +254,6 @@ class Map extends Component {
         };
         this.mapRef = null; // Reference to map instance
         this.debounceTimer = null; // Timer for debouncing viewport changes
-        this._locationReceived = false;
         this._blockViewportFetchUntil = 0; // ms timestamp; viewport fetches are ignored before this
     }
 
@@ -256,56 +262,28 @@ class Map extends Component {
     };
 
     componentDidMount() {
-        this.requestUserLocation();
+        this.requestIpLocation();
     }
 
-    // Request geolocation on startup; center map + seed first pin fetch with ~100-mile bounds.
-    // Browser remembers the permission grant, so after the first accept it's a silent call.
-    requestUserLocation = async () => {
-        if (!navigator.geolocation) {
-            this.fetchPins();
-            return;
-        }
-        // Skip the wait if the user has already explicitly denied permission
-        if (navigator.permissions) {
-            try {
-                const status = await navigator.permissions.query({ name: 'geolocation' });
-                if (status.state === 'denied') {
-                    this.fetchPins();
+    // On startup, get approximate location from the server-side IP lookup (no browser
+    // permission prompt). Uses the precise location only when the user explicitly clicks
+    // the locate-me button.
+    requestIpLocation = async () => {
+        try {
+            const response = await fetch(`${API_BASE}/api/locate`);
+            if (response.ok) {
+                const data = await response.json();
+                if (data.lat && data.lng) {
+                    const userLocation = { lat: data.lat, lng: data.lng };
+                    this._blockViewportFetchUntil = Date.now() + 4000;
+                    this.setState({ userLocation });
+                    this.fetchPins(false, this.getLocationBounds(data.lat, data.lng));
                     return;
                 }
-            } catch (e) { /* Permissions API unavailable */ }
-        }
-        this._locationReceived = false;
-        // If geolocation stalls (e.g. user ignores the prompt), fall back after 5 s
-        const fallback = setTimeout(() => {
-            if (!this._locationReceived) {
-                this._locationReceived = true;
-                this.fetchPins();
             }
-        }, 5000);
-        navigator.geolocation.getCurrentPosition(
-            (pos) => {
-                if (this._locationReceived) return;
-                this._locationReceived = true;
-                clearTimeout(fallback);
-                const userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-                // Cache across the session so the add-fruit form is pre-filled
-                try { sessionStorage.setItem('ffa_last_location', JSON.stringify(userLocation)); } catch (e) {}
-                // Block viewport-change re-fetches for 4 s so the fly-to animation
-                // doesn't immediately overwrite this regional load with a tiny viewport.
-                this._blockViewportFetchUntil = Date.now() + 4000;
-                this.setState({ userLocation });
-                this.fetchPins(false, this.getLocationBounds(userLocation.lat, userLocation.lng));
-            },
-            () => {
-                if (this._locationReceived) return;
-                this._locationReceived = true;
-                clearTimeout(fallback);
-                this.fetchPins();
-            },
-            { timeout: 8000, maximumAge: 5 * 60 * 1000, enableHighAccuracy: false }
-        );
+        } catch (e) { /* network error — fall through */ }
+        // Fall back: fetch all pins without a bounding box (map stays on default center)
+        this.fetchPins();
     };
 
     // Returns a bounding box approximately 100 miles around (lat, lng)
@@ -615,7 +593,10 @@ class Map extends Component {
                         <MapFlyTo target={this.state.userLocation} />
                         <PanToPin target={this.state.pinFlyTarget} seq={this.state.pinFlySeq} />
                         <ClosePopupsOnCommand signal={this.state.closePopupsSignal} />
-                        <LocateMeButton userLocation={this.state.userLocation} onLocate={() => { this._blockViewportFetchUntil = Date.now() + 3000; }} />
+                        <LocateMeButton
+                            onLocate={() => { this._blockViewportFetchUntil = Date.now() + 4000; }}
+                            onPreciseLocation={(loc) => { this.setState({ userLocation: loc }); }}
+                        />
                         <MapEvents 
                             onViewportChange={this.handleViewportChange} 
                             onZoomChange={this.handleZoomChange}

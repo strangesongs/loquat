@@ -310,6 +310,29 @@ controller.createPin = async (req, res) => {
   }
 };
 
+// Approximate location from client IP using ipapi.co (no auth required)
+controller.getIpLocation = async (req, res) => {
+  try {
+    let ip = req.ip || '';
+    // Unwrap IPv4-mapped IPv6 address (::ffff:1.2.3.4 → 1.2.3.4)
+    if (ip.startsWith('::ffff:')) ip = ip.slice(7);
+    // Localhost / dev environment — return null so client falls back to default
+    if (!ip || ip === '127.0.0.1' || ip === '::1') {
+      return res.json({ lat: null, lng: null, city: null });
+    }
+    const response = await fetch(`https://ipapi.co/${encodeURIComponent(ip)}/json/`);
+    if (!response.ok) return res.json({ lat: null, lng: null, city: null });
+    const data = await response.json();
+    if (data.error || !data.latitude || !data.longitude) {
+      return res.json({ lat: null, lng: null, city: null });
+    }
+    res.setHeader('Cache-Control', 'private, max-age=3600');
+    return res.json({ lat: data.latitude, lng: data.longitude, city: data.city || null });
+  } catch (e) {
+    return res.json({ lat: null, lng: null, city: null });
+  }
+};
+
 // Get a sample of pins for unauthenticated (public) visitors
 controller.getPublicPins = async (req, res) => {
   try {

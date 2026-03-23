@@ -8,6 +8,9 @@ import controllers from './server/controllers/controllers.js';
 
 const app = express();
 const PORT = 8080;
+
+// Trust the first proxy hop (Railway, etc.) so req.ip returns the real client IP
+app.set('trust proxy', 1);
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -98,6 +101,7 @@ app.get('/map', (req, res) => {
 });
 
 // Public endpoints (no auth required)
+app.get('/api/locate', controllers.getIpLocation); // approximate location from client IP
 app.get('/api/pins/public', controllers.getPublicPins); // preview pins for logged-out users
 
 // Authentication endpoints (no auth required, but rate limited)
