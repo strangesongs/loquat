@@ -333,7 +333,7 @@ export default class Sidebar extends React.Component {
                     authPassword: '',
                     authError: '',
                     isCollapsed: window.innerWidth <= 360,
-                    showAddFruitPopup: wasGuestAddAttempted,
+                    showAddFruitPopup: !!wasGuestAddAttempted, // Only open if guest tried to add
                 });
                 // Load fruit types now that we're authenticated
                 this.fetchAvailableFruitTypes();
