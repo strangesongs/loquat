@@ -63,9 +63,17 @@ export default class Sidebar extends React.Component {
             pinCount: 0,
             subtextIndex: 0,
         }
-    };
+        console.log('[Sidebar:constructor] initial showAddFruitPopup:', this.state.showAddFruitPopup);
+    }
 
     componentDidMount() {
+                        // Failsafe: always close add-find modal on mount for authenticated users
+                        if (isAuthenticated() && this.state.showAddFruitPopup) {
+                            this.setState({ showAddFruitPopup: false }, () => {
+                                console.log('[Sidebar:componentDidMount] Failsafe: closed add-find modal for authenticated user');
+                            });
+                        }
+                console.log('[Sidebar:componentDidMount] showAddFruitPopup:', this.state.showAddFruitPopup);
             console.log('[MOUNT] sessionStorage ffa_guest_add_attempted:', sessionStorage.getItem('ffa_guest_add_attempted'));
         // If not in a guest add flow, clear the session flag
         if (!this.state.guestAddAttempted && !isAuthenticated()) {
@@ -179,6 +187,10 @@ export default class Sidebar extends React.Component {
                 fruitType: opening ? '' : prevState.fruitType,
                 notes: opening ? '' : prevState.notes,
             };
+        }, () => {
+            if (this.state.showAddFruitPopup) {
+                console.log('[Sidebar:toggleAddFruitPopup] showAddFruitPopup set to TRUE');
+            }
         });
     };
 
@@ -330,10 +342,8 @@ export default class Sidebar extends React.Component {
             const result = await response.json();
 
             if (result.success) {
-                const wasGuestAddAttempted = sessionStorage.getItem('ffa_guest_add_attempted') === '1';
-                console.log('[LOGIN] sessionStorage before clear:', sessionStorage.getItem('ffa_guest_add_attempted'));
+                // Always clear guest add flag on login
                 sessionStorage.removeItem('ffa_guest_add_attempted');
-                console.log('[LOGIN] guestAddAttempted at login:', wasGuestAddAttempted);
                 saveAuth(result.token, result.user);
                 this.setState({ 
                     authenticated: true,
@@ -342,7 +352,7 @@ export default class Sidebar extends React.Component {
                     authPassword: '',
                     authError: '',
                     isCollapsed: window.innerWidth <= 360,
-                    showAddFruitPopup: wasGuestAddAttempted,
+                    showAddFruitPopup: false,
                 });
                 // Load fruit types now that we're authenticated
                 this.fetchAvailableFruitTypes();
@@ -416,9 +426,7 @@ export default class Sidebar extends React.Component {
 
             if (result.success) {
                 const wasGuestAddAttempted = sessionStorage.getItem('ffa_guest_add_attempted') === '1';
-                console.log('[REGISTER] sessionStorage before clear:', sessionStorage.getItem('ffa_guest_add_attempted'));
                 sessionStorage.removeItem('ffa_guest_add_attempted');
-                console.log('[REGISTER] guestAddAttempted at register:', wasGuestAddAttempted);
                 saveAuth(result.token, result.user);
                 this.setState({ 
                     authenticated: true,
@@ -428,13 +436,20 @@ export default class Sidebar extends React.Component {
                     authEmail: '',
                     authError: '',
                     isCollapsed: window.innerWidth <= 360,
-                    showAddFruitPopup: wasGuestAddAttempted,
+                    showAddFruitPopup: !!wasGuestAddAttempted,
+                }, () => {
+                    if (this.state.showAddFruitPopup) {
+                        console.log('[Sidebar:handleRegister] showAddFruitPopup set to TRUE');
+                    }
                 });
                 // Notify parent to refresh pins
                 if (this.props.onAuthSuccess) {
                     this.props.onAuthSuccess();
                 }
             } else {
+                // Always clear guest add flag and modal on failed registration
+                sessionStorage.removeItem('ffa_guest_add_attempted');
+                this.setState({ showAddFruitPopup: false });
                 this.setState({ authError: result.message || 'registration failed' });
             }
         } catch (error) {
@@ -1022,7 +1037,8 @@ export default class Sidebar extends React.Component {
                     <div className="bottom-section">
                         <p className="toggle-auth">
                             <span
-                                onClick={() => {
+                                onClick={(e) => {
+                                    e.preventDefault();
                                     sessionStorage.removeItem('ffa_guest_add_attempted');
                                     this.setState({
                                         guestAddAttempted: true,
@@ -1036,13 +1052,14 @@ export default class Sidebar extends React.Component {
                                         forgotEmail: '',
                                         forgotError: '',
                                         forgotSuccess: false
-                                    });
+                                    }, () => this.forceUpdate());
                                 }}
                                 className="toggle-link"
                             >sign in</span>
                             {' / '}
                             <span
-                                onClick={() => {
+                                onClick={(e) => {
+                                    e.preventDefault();
                                     sessionStorage.removeItem('ffa_guest_add_attempted');
                                     this.setState({
                                         guestAddAttempted: true,
@@ -1056,7 +1073,7 @@ export default class Sidebar extends React.Component {
                                         forgotEmail: '',
                                         forgotError: '',
                                         forgotSuccess: false
-                                    });
+                                    }, () => this.forceUpdate());
                                 }}
                                 className="toggle-link"
                             >create account</span>
