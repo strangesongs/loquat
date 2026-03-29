@@ -66,6 +66,11 @@ export default class Sidebar extends React.Component {
     };
 
     componentDidMount() {
+            console.log('[MOUNT] sessionStorage ffa_guest_add_attempted:', sessionStorage.getItem('ffa_guest_add_attempted'));
+        // If not in a guest add flow, clear the session flag
+        if (!this.state.guestAddAttempted && !isAuthenticated()) {
+            sessionStorage.removeItem('ffa_guest_add_attempted');
+        }
         if (isAuthenticated()) {
             this.fetchAvailableFruitTypes();
         } else {
@@ -161,6 +166,7 @@ export default class Sidebar extends React.Component {
 
     toggleAddFruitPopup = () => {
         if (!isAuthenticated()) {
+            sessionStorage.setItem('ffa_guest_add_attempted', '1');
             this.setState({ guestAddAttempted: true });
             return;
         }
@@ -324,7 +330,10 @@ export default class Sidebar extends React.Component {
             const result = await response.json();
 
             if (result.success) {
-                const wasGuestAddAttempted = this.state.guestAddAttempted;
+                const wasGuestAddAttempted = sessionStorage.getItem('ffa_guest_add_attempted') === '1';
+                console.log('[LOGIN] sessionStorage before clear:', sessionStorage.getItem('ffa_guest_add_attempted'));
+                sessionStorage.removeItem('ffa_guest_add_attempted');
+                console.log('[LOGIN] guestAddAttempted at login:', wasGuestAddAttempted);
                 saveAuth(result.token, result.user);
                 this.setState({ 
                     authenticated: true,
@@ -333,7 +342,7 @@ export default class Sidebar extends React.Component {
                     authPassword: '',
                     authError: '',
                     isCollapsed: window.innerWidth <= 360,
-                    showAddFruitPopup: !!wasGuestAddAttempted, // Only open if guest tried to add
+                    showAddFruitPopup: wasGuestAddAttempted,
                 });
                 // Load fruit types now that we're authenticated
                 this.fetchAvailableFruitTypes();
@@ -406,7 +415,10 @@ export default class Sidebar extends React.Component {
             const result = await response.json();
 
             if (result.success) {
-                const wasGuestAddAttempted = this.state.guestAddAttempted;
+                const wasGuestAddAttempted = sessionStorage.getItem('ffa_guest_add_attempted') === '1';
+                console.log('[REGISTER] sessionStorage before clear:', sessionStorage.getItem('ffa_guest_add_attempted'));
+                sessionStorage.removeItem('ffa_guest_add_attempted');
+                console.log('[REGISTER] guestAddAttempted at register:', wasGuestAddAttempted);
                 saveAuth(result.token, result.user);
                 this.setState({ 
                     authenticated: true,
@@ -916,7 +928,10 @@ export default class Sidebar extends React.Component {
                     ) : !guestAddAttempted && (
                         <p className="toggle-auth" style={{marginTop: '8px', marginBottom: '2px'}}>
                             <span
-                                onClick={() => this.setState({ guestAddAttempted: true })}
+                                onClick={() => {
+                                    sessionStorage.removeItem('ffa_guest_add_attempted');
+                                    this.setState({ guestAddAttempted: false, isLoginMode: true });
+                                }}
                                 className="toggle-link"
                             >sign in / register</span>
                         </p>
@@ -1006,12 +1021,21 @@ export default class Sidebar extends React.Component {
 
                     <div className="bottom-section">
                         <p className="toggle-auth">
-                            <span onClick={() => this.setState({ guestAddAttempted: true, isLoginMode: true, showAbout: false })} className="toggle-link">sign in</span>
+                            <span onClick={() => {
+                                sessionStorage.removeItem('ffa_guest_add_attempted');
+                                this.setState({ isLoginMode: true, showAbout: false, guestAddAttempted: false });
+                            }} className="toggle-link">sign in</span>
                             {' / '}
-                            <span onClick={() => this.setState({ guestAddAttempted: true, isLoginMode: false, showAbout: false })} className="toggle-link">create account</span>
+                            <span onClick={() => {
+                                sessionStorage.removeItem('ffa_guest_add_attempted');
+                                this.setState({ isLoginMode: false, showAbout: false, guestAddAttempted: false });
+                            }} className="toggle-link">create account</span>
                         </p>
                         <p className="toggle-auth">
-                            <span onClick={() => this.setState({ guestAddAttempted: true, showAbout: true })} className="secondary-link">what is fruit for all?</span>
+                            <span onClick={() => {
+                                sessionStorage.removeItem('ffa_guest_add_attempted');
+                                this.setState({ showAbout: true, guestAddAttempted: false });
+                            }} className="secondary-link">what is fruit for all?</span>
                         </p>
                     </div>
                 </>

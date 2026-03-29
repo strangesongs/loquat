@@ -128,80 +128,12 @@ function ClosePopupsOnCommand({ signal }) {
 const MONTH_LETTERS = ['J','F','M','A','M','J','J','A','S','O','N','D'];
 const MONTH_NAMES   = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
-// Season strip — 12-segment month bar with today tick and status pill
-function SeasonStrip({ inSeason, seasonMonths, generalSeason, currentMonth }) {
-    const seasonSet = new Set(seasonMonths || []);
+// ...existing code...
 
-    let pillClass, pillIcon, pillText;
-    if (inSeason !== null) {
-        if (inSeason) {
-            pillClass = 'strip-pill strip-pill--in';
-            pillIcon = (
-                <svg width="10" height="10" viewBox="0 0 12 12" fill="none">
-                    <path d="M2 10 C2 10 3 5 8 3 C10 2 11 2 11 2 C11 2 11 3 10 5 C8 8 4 10 2 10Z" fill="currentColor"/>
-                    <line x1="2" y1="10" x2="6" y2="6" stroke="currentColor" strokeWidth="1" strokeLinecap="round"/>
-                </svg>
-            );
-            pillText = 'in season now';
-        } else if (seasonMonths && seasonMonths.length > 0) {
-            const range = seasonMonths.length > 6
-                ? 'most of the year'
-                : `${MONTH_NAMES[seasonMonths[0]-1]} \u2013 ${MONTH_NAMES[seasonMonths[seasonMonths.length-1]-1]}`;
-            pillClass = 'strip-pill strip-pill--upcoming';
-            pillIcon = (
-                <svg width="10" height="10" viewBox="0 0 12 12" fill="none">
-                    <circle cx="6" cy="6" r="2.5" fill="currentColor"/>
-                    <line x1="6" y1="0.5" x2="6" y2="2" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
-                    <line x1="6" y1="10" x2="6" y2="11.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
-                    <line x1="0.5" y1="6" x2="2" y2="6" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
-                    <line x1="10" y1="6" x2="11.5" y2="6" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
-                </svg>
-            );
-            pillText = range;
-        } else {
-            pillClass = 'strip-pill strip-pill--out';
-            pillIcon = (
-                <svg width="9" height="10" viewBox="0 0 10 12" fill="none">
-                    <path d="M7.5 1.5 A4.5 4.5 0 1 0 7.5 10.5 A3 3 0 1 1 7.5 1.5Z" fill="currentColor"/>
-                </svg>
-            );
-            pillText = 'out of season';
-        }
-    } else {
-        pillClass = 'strip-pill strip-pill--general';
-        pillIcon = (
-            <svg width="10" height="10" viewBox="0 0 12 12" fill="none">
-                <rect x="1" y="2.5" width="10" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.1" fill="none"/>
-                <line x1="1" y1="5.5" x2="11" y2="5.5" stroke="currentColor" strokeWidth="1"/>
-                <line x1="4" y1="1" x2="4" y2="4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
-                <line x1="8" y1="1" x2="8" y2="4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
-            </svg>
-        );
-        pillText = generalSeason ? generalSeason.toLowerCase() : 'season varies';
-    }
-
-    const todayLeft = `calc(${((currentMonth - 0.5) / 12 * 100).toFixed(2)}% - 1px)`;
-
-    return (
-        <div className="season-strip">
-            <div className={pillClass}>
-                {pillIcon}
-                {pillText}
-            </div>
-            <div className="season-strip__wrap">
-                <div className="season-strip__bar">
-                    {MONTH_LETTERS.map((_, i) => (
-                        <div key={i} className={`season-strip__seg${seasonSet.has(i + 1) ? ' peak' : ''}`} />
-                    ))}
-                </div>
-                <div className="season-strip__today" style={{ left: todayLeft }} />
-                <div className="season-strip__labels">
-                    {MONTH_LETTERS.map((l, i) => <span key={i}>{l}</span>)}
-                </div>
-            </div>
-        </div>
-    );
-}
+// Import extracted components
+import SeasonStrip from './components/SeasonStrip.jsx';
+import PinPopup from './components/PinPopup.jsx';
+import MapControls from './components/MapControls.jsx';
 
 // Component to handle map events
 function MapEvents({ onViewportChange, onZoomChange }) {
@@ -663,22 +595,7 @@ class Map extends Component {
                                 const isMyPin = currentUsername && pin.submittedBy === currentUsername;
                                 const markerIcon = isMyPin ? myPinIcon : defaultIcon;
                                 
-                                // Calculate seasonal status
-                                const currentMonth = new Date().getMonth() + 1;
-                                const inSeason = pin.zone ? isInSeason(pin.fruitType, pin.zone, currentMonth) : null;
-                                const seasonMonths = pin.zone ? getSeasonForZone(pin.fruitType, pin.zone) : null;
-                                const generalSeason = getSeasonDisplay(pin.fruitType);
-                                
-                                // Determine season badge
-                                const seasonBadge = (
-                                    <SeasonStrip
-                                        inSeason={inSeason}
-                                        seasonMonths={seasonMonths}
-                                        generalSeason={generalSeason}
-                                        currentMonth={currentMonth}
-                                    />
-                                );
-                                
+                                // ...existing code...
                                 return (
                                     <Marker 
                                         position={[pin.coordinates.lat, pin.coordinates.lng]} 
@@ -686,96 +603,18 @@ class Map extends Component {
                                         icon={markerIcon}
                                     >
                                         <Popup autoPan={false} eventHandlers={{ add: () => { this.setState(prev => ({ pinFlyTarget: { lat: pin.coordinates.lat, lng: pin.coordinates.lng }, pinFlySeq: prev.pinFlySeq + 1 })); this.props.onPinOpen && this.props.onPinOpen(); } }}>
-                                            <div className="pin-popup">
-                                                <div className="popup-header">
-                                                    <h3 className="fruit-title">{pin.fruitTypeDisplay.toLowerCase()}</h3>
-                                                    {seasonBadge}
-                                                </div>
-                                                
-                                                <div className="popup-content">
-                                                    {(pin.notes || editingPinId === pin.pinId || (isMyPin || isAdmin())) && (
-                                                        <div className="notes-section">
-                                                            <strong>notes:</strong>
-                                                            {editingPinId === pin.pinId ? (
-                                                                <div className="edit-notes-box">
-                                                                    <textarea 
-                                                                        value={editingNotes}
-                                                                        onChange={(e) => this.setState({ editingNotes: e.target.value })}
-                                                                        className="notes-textarea"
-                                                                    />
-                                                                    <div className="edit-notes-actions">
-                                                                        <button 
-                                                                            onClick={() => this.saveEditedNotes(pin.pinId)}
-                                                                            className="save-notes-btn"
-                                                                        >
-                                                                            save
-                                                                        </button>
-                                                                        <button 
-                                                                            onClick={this.cancelEditingNotes}
-                                                                            className="cancel-notes-btn"
-                                                                        >
-                                                                            cancel
-                                                                        </button>
-                                                                    </div>
-                                                                </div>
-                                                            ) : pin.notes ? (
-                                                                <p 
-                                                                    className="pin-notes clickable-notes"
-                                                                    onClick={() => (isMyPin || isAdmin()) && this.startEditingNotes(pin.pinId, pin.notes)}
-                                                                    style={{ cursor: (isMyPin || isAdmin()) ? 'pointer' : 'default' }}
-                                                                    title={(isMyPin || isAdmin()) ? 'Click to edit' : ''}
-                                                                >
-                                                                    {pin.notes}
-                                                                </p>
-                                                            ) : (isMyPin || isAdmin()) ? (
-                                                                <p
-                                                                    className="pin-notes add-notes-prompt"
-                                                                    onClick={() => this.startEditingNotes(pin.pinId, '')}
-                                                                    style={{ cursor: 'pointer' }}
-                                                                >
-                                                                    + add notes
-                                                                </p>
-                                                            ) : null}
-                                                        </div>
-                                                    )}
-                                                    
-                                                    <details className="metadata-details">
-                                                        <summary className="metadata-summary">details</summary>
-                                                        <div className="metadata-grid">
-                                                            <div className="metadata-item">
-                                                                <strong>location:</strong>
-                                                                <span>{pin.coordinates.lat.toFixed(4)}, {pin.coordinates.lng.toFixed(4)}</span>
-                                                            </div>
-                                                            
-                                                            <div className="metadata-item">
-                                                                <strong>added by:</strong>
-                                                                <span>{pin.submittedBy || 'anonymous'}</span>
-                                                            </div>
-                                                            
-                                                            <div className="metadata-item">
-                                                                <strong>date:</strong>
-                                                                <span>{new Date(pin.createdAt).toLocaleDateString('en-US', {
-                                                                    year: 'numeric',
-                                                                    month: 'short',
-                                                                    day: 'numeric'
-                                                                })}</span>
-                                                            </div>
-                                                        </div>
-                                                    </details>
-                                                    
-                                                    {/* Action buttons - show delete for owner or admin */}
-                                                    {(isMyPin || isAdmin()) && (
-                                                        <div className="pin-actions">
-                                                            <button 
-                                                                className="delete-pin-btn"
-                                                                onClick={() => this.deletePin(pin.pinId)}
-                                                            >
-                                                                delete pin
-                                                            </button>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </div>
+                                            <PinPopup
+                                                pin={pin}
+                                                isMyPin={isMyPin}
+                                                isAdmin={isAdmin()}
+                                                editingPinId={editingPinId}
+                                                editingNotes={editingNotes}
+                                                startEditingNotes={this.startEditingNotes}
+                                                cancelEditingNotes={this.cancelEditingNotes}
+                                                saveEditedNotes={this.saveEditedNotes}
+                                                deletePin={this.deletePin}
+                                                setEditingNotes={val => this.setState({ editingNotes: val })}
+                                            />
                                         </Popup>
                                     </Marker>
                                 );

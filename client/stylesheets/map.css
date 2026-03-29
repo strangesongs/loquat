@@ -228,6 +228,14 @@
 }
 
 .notes-section {
+@media (max-width: 360px) {
+    .leaflet-top.leaflet-right {
+        top: 12px !important;
+        right: 12px !important;
+        left: auto !important;
+        bottom: auto !important;
+    }
+}
     margin-bottom: 6px;
     padding: 5px 8px;
     background: #fafafa;
