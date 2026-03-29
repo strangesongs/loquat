@@ -1021,15 +1021,45 @@ export default class Sidebar extends React.Component {
 
                     <div className="bottom-section">
                         <p className="toggle-auth">
-                            <span onClick={() => {
-                                sessionStorage.removeItem('ffa_guest_add_attempted');
-                                this.setState({ isLoginMode: true, showAbout: false, guestAddAttempted: false });
-                            }} className="toggle-link">sign in</span>
+                            <span
+                                onClick={() => {
+                                    sessionStorage.removeItem('ffa_guest_add_attempted');
+                                    this.setState({
+                                        guestAddAttempted: true,
+                                        isLoginMode: true,
+                                        showAbout: false,
+                                        authError: '',
+                                        authUserName: '',
+                                        authPassword: '',
+                                        authEmail: '',
+                                        isForgotMode: false,
+                                        forgotEmail: '',
+                                        forgotError: '',
+                                        forgotSuccess: false
+                                    });
+                                }}
+                                className="toggle-link"
+                            >sign in</span>
                             {' / '}
-                            <span onClick={() => {
-                                sessionStorage.removeItem('ffa_guest_add_attempted');
-                                this.setState({ isLoginMode: false, showAbout: false, guestAddAttempted: false });
-                            }} className="toggle-link">create account</span>
+                            <span
+                                onClick={() => {
+                                    sessionStorage.removeItem('ffa_guest_add_attempted');
+                                    this.setState({
+                                        guestAddAttempted: true,
+                                        isLoginMode: false,
+                                        showAbout: false,
+                                        authError: '',
+                                        authUserName: '',
+                                        authPassword: '',
+                                        authEmail: '',
+                                        isForgotMode: false,
+                                        forgotEmail: '',
+                                        forgotError: '',
+                                        forgotSuccess: false
+                                    });
+                                }}
+                                className="toggle-link"
+                            >create account</span>
                         </p>
                         <p className="toggle-auth">
                             <span onClick={() => {
