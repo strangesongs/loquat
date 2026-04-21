@@ -12,6 +12,13 @@
     --font:      'Vollkorn', serif;
     --olive:     #5c6b2e;
     --del:       #3d5a3e;
+    --app-viewport-height: 100vh;
+}
+
+@supports (height: 100dvh) {
+    :root {
+        --app-viewport-height: 100dvh;
+    }
 }
 
 html, body {
@@ -24,7 +31,7 @@ html, body {
 
 .main-layout {
     position: relative;
-    height: 100vh;
+    height: var(--app-viewport-height);
     width: 100vw;
     min-width: 240px;
     min-height: 320px;
@@ -37,7 +44,7 @@ html, body {
     left: 20px;
     background: var(--card);
     width: 280px;
-    max-height: calc(100vh - 40px);
+    max-height: calc(var(--app-viewport-height) - 40px);
     box-sizing: border-box;
     overflow-x: hidden;
     overflow-y: auto;
@@ -80,7 +87,7 @@ html, body {
     width: 100%;
 }
 
-button:not(.hamburger-btn):not(.mobile-fab):not(.mobile-panel-btn):not(.auth-submit-btn), .action-btn {
+button:not(.hamburger-btn):not(.mobile-fab):not(.mobile-panel-btn):not(.auth-submit-btn):not(.toggle-link):not(.secondary-link):not(.fruit-suggestion-btn), .action-btn {
     background-color: var(--red);
     color: white;
     padding: 10px 14px;
@@ -101,11 +108,11 @@ button:not(.hamburger-btn):not(.mobile-fab):not(.mobile-panel-btn):not(.auth-sub
     transition: background-color 0.2s ease;
 }
 
-button:not(.hamburger-btn):not(.mobile-fab):not(.mobile-panel-btn):not(.auth-submit-btn):hover, .action-btn:hover {
+button:not(.hamburger-btn):not(.mobile-fab):not(.mobile-panel-btn):not(.auth-submit-btn):not(.toggle-link):not(.secondary-link):not(.fruit-suggestion-btn):hover, .action-btn:hover {
     background-color: var(--red-dark);
 }
 
-button:not(.hamburger-btn):not(.mobile-fab):not(.mobile-panel-btn):not(.auth-submit-btn):active, .action-btn:active {
+button:not(.hamburger-btn):not(.mobile-fab):not(.mobile-panel-btn):not(.auth-submit-btn):not(.toggle-link):not(.secondary-link):not(.fruit-suggestion-btn):active, .action-btn:active {
     border: 2px inset var(--red);
 }
 
@@ -285,6 +292,17 @@ button.auth-submit-btn:disabled {
     text-align: center;
 }
 
+.toggle-auth.toggle-auth-tight {
+    margin-top: 4px;
+    margin-bottom: 2px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 4px;
+    line-height: 1.3;
+}
+
 .auth-card-divider {
     width: 60%;
     border: none;
@@ -294,29 +312,66 @@ button.auth-submit-btn:disabled {
 
 /* Primary action link — register / login toggle */
 .toggle-link {
+    background: none;
+    border: none;
+    padding: 0;
+    margin: 0;
     color: inherit;
     text-decoration: none;
     cursor: pointer;
     font-weight: 500;
     display: inline;
+    font: inherit;
+}
+
+/* Override broad button styles for inline auth links */
+button.toggle-link {
+    width: auto !important;
+    min-width: 0;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+    background: none !important;
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    font: inherit;
+    line-height: inherit;
 }
 
 .toggle-link:hover {
     color: var(--red);
 }
 
+.toggle-link:focus-visible {
+    outline: 2px solid var(--red);
+    outline-offset: 2px;
+    border-radius: 2px;
+}
+
 /* Secondary link — about */
 .secondary-link {
+    background: none;
+    border: none;
+    padding: 0;
+    margin: 0;
     font-size: 0.8rem;
     font-weight: 400;
     color: var(--text-faint);
     text-decoration: none;
     cursor: pointer;
     display: inline;
+    font-family: inherit;
 }
 
 .secondary-link:hover {
     color: var(--red);
+}
+
+.secondary-link:focus-visible {
+    outline: 2px solid var(--red);
+    outline-offset: 2px;
+    border-radius: 2px;
 }
 
 .error-message {
@@ -376,6 +431,35 @@ button.auth-submit-btn:disabled {
 
 .about-panel p {
     margin: 0 0 10px 0;
+}
+
+.about-copy {
+    font-size: 0.82rem;
+    line-height: 1.55;
+    color: var(--text);
+}
+
+.about-copy--mobile {
+    border-top: 1px solid var(--border);
+    padding-top: 8px;
+}
+
+.about-copy-title {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--text);
+    margin: 0 0 12px;
+    text-align: center;
+}
+
+.about-copy-body {
+    margin: 0 0 10px;
+}
+
+.about-copy-meta {
+    font-size: 0.75rem;
+    color: var(--text-faint);
+    margin: 0 0 5px;
 }
 
 .about-oss {
@@ -509,7 +593,7 @@ button.auth-submit-btn:disabled {
     border: 2px solid #ccc;
     max-width: 400px;
     width: 90%;
-    max-height: 80vh;
+    max-height: min(80dvh, calc(var(--app-viewport-height) - 24px));
     overflow-y: auto;
 }
 
@@ -564,7 +648,7 @@ button.auth-submit-btn:disabled {
     border: 2px solid #e0e0e0;
     max-width: 400px;
     width: 90%;
-    max-height: 80vh;
+    max-height: min(80dvh, calc(var(--app-viewport-height) - 24px));
     overflow-y: auto;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
@@ -813,7 +897,7 @@ button.close-btn:hover {
 @media (max-width: 768px) {
     .sidebar {
         width: 260px;
-        max-height: calc(100vh - 30px);
+        max-height: calc(var(--app-viewport-height) - 30px);
         top: 15px;
         left: 15px;
         padding: 10px;
@@ -869,7 +953,7 @@ button.close-btn:hover {
         font-size: 0.8rem;
     }
     
-    button:not(.hamburger-btn):not(.mobile-fab):not(.mobile-panel-btn):not(.auth-submit-btn), .action-btn {
+    button:not(.hamburger-btn):not(.mobile-fab):not(.mobile-panel-btn):not(.auth-submit-btn):not(.toggle-link):not(.secondary-link):not(.fruit-suggestion-btn), .action-btn {
         font-size: 0.8rem;
         padding: 6px 10px;
     }
@@ -900,10 +984,6 @@ button.close-btn:hover {
 }
 
 .fruit-suggestions li {
-    padding: 8px 12px;
-    font-size: 0.85rem;
-    color: var(--text);
-    cursor: pointer;
     border-bottom: 1px solid #f0f0f0;
     margin: 0;
 }
@@ -912,10 +992,28 @@ button.close-btn:hover {
     border-bottom: none;
 }
 
-.fruit-suggestions li:hover,
+.fruit-suggestion-btn {
+    width: 100%;
+    background: transparent;
+    border: none;
+    padding: 8px 12px;
+    font-size: 0.85rem;
+    color: var(--text);
+    cursor: pointer;
+    text-align: left;
+    font-family: inherit;
+}
+
+.fruit-suggestion-btn:hover,
+.fruit-suggestion-btn:focus-visible,
 .fruit-suggestion-active {
     background-color: #f7f0e8;
     color: var(--red);
+}
+
+.fruit-suggestion-btn:focus-visible {
+    outline: 2px solid var(--red);
+    outline-offset: -2px;
 }
 
 .fruit-not-found {
@@ -993,7 +1091,7 @@ button.close-btn:hover {
         height: 46px;
         left: 12px;
         right: auto;
-        bottom: 12px;
+        bottom: calc(12px + env(safe-area-inset-bottom, 0px));
         border-radius: 50%;
         padding: 0;
         max-height: 46px;
@@ -1027,7 +1125,7 @@ button.close-btn:hover {
         padding: 7px 10px;
     }
 
-    button:not(.hamburger-btn):not(.mobile-fab):not(.mobile-panel-btn):not(.auth-submit-btn), .action-btn {
+    button:not(.hamburger-btn):not(.mobile-fab):not(.mobile-panel-btn):not(.auth-submit-btn):not(.toggle-link):not(.secondary-link):not(.fruit-suggestion-btn), .action-btn {
         font-size: 0.75rem;
         padding: 6px 8px;
     }
@@ -1047,6 +1145,10 @@ button.close-btn:hover {
     }
 
     .fruit-suggestions li {
+        margin: 0;
+    }
+
+    .fruit-suggestion-btn {
         padding: 5px 8px;
         font-size: 0.75rem;
     }
@@ -1056,7 +1158,7 @@ button.close-btn:hover {
     .notes-popup {
         width: calc(100vw - 16px);
         max-width: calc(100vw - 16px);
-        max-height: 92dvh;
+        max-height: min(92dvh, calc(var(--app-viewport-height) - 16px));
         border-radius: 8px;
     }
 }
@@ -1065,7 +1167,7 @@ button.close-btn:hover {
 
 .mobile-fab {
     position: fixed;
-    bottom: 12px;
+    bottom: calc(12px + env(safe-area-inset-bottom, 0px));
     left: 12px;
     width: 46px;
     height: 46px;
@@ -1102,10 +1204,10 @@ button.close-btn:hover {
 
 .mobile-panel {
     position: fixed;
-    bottom: 68px;
+    bottom: calc(68px + env(safe-area-inset-bottom, 0px));
     left: 12px;
     right: 12px;
-    max-height: calc(100dvh - 82px);
+    max-height: calc(var(--app-viewport-height) - 82px - env(safe-area-inset-bottom, 0px));
     overflow-y: auto;
     background: var(--card);
     border: 2px solid var(--border);
@@ -1245,6 +1347,7 @@ button.close-btn:hover {
     z-index: 1000;
     box-shadow: 0 -3px 14px rgba(0, 0, 0, 0.18);
     font-family: var(--font);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 /* Collapsed bar: icon + text + button in a row */
@@ -1286,6 +1389,13 @@ button.close-btn:hover {
     animation: subtextFadeIn 0.5s ease;
 }
 
+.guest-bar-inline-kicker {
+    margin: 4px 0 0;
+    font-size: 0.76rem;
+    line-height: 1.35;
+    color: var(--text-muted);
+}
+
 @keyframes subtextFadeIn {
     from { opacity: 0; transform: translateY(2px); }
     to   { opacity: 1; transform: translateY(0); }
@@ -1303,18 +1413,35 @@ button.auth-submit-btn.guest-bar-btn {
 /* About link below collapsed bar row */
 .guest-bar-about-link {
     text-align: center;
-    padding: 0 16px 10px;
+    padding: 3px 16px 14px;
     margin: 0;
+}
+
+.guest-bar-links-row {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 6px;
+    font-size: 1rem;
+}
+
+.guest-bar-links-row .secondary-link {
+    font-size: 0.92rem;
+    color: var(--text-muted);
+}
+
+.guest-bar-links-row .secondary-link:hover {
+    color: var(--red);
 }
 
 /* Expanded bar */
 .guest-bar--expanded {
-    max-height: 72dvh;
+    max-height: min(72dvh, calc(var(--app-viewport-height) - 32px - env(safe-area-inset-bottom, 0px)));
     overflow-y: auto;
 }
 
 .guest-bar-expanded-content {
-    padding: 6px 18px 22px;
+    padding: 10px 18px 24px;
 }
 
 .guest-bar-expanded-header {
@@ -1336,8 +1463,15 @@ button.auth-submit-btn.guest-bar-btn {
     margin: 0;
 }
 
+.guest-bar-expanded-kicker {
+    margin: 1px 0 0;
+    color: var(--text-muted);
+    font-size: 0.74rem;
+    line-height: 1.2;
+}
+
 .guest-bar-form .form-group {
-    margin-bottom: 8px;
+    margin-bottom: 10px;
 }
 
 .guest-bar-form .form-group input {
@@ -1363,6 +1497,15 @@ button.auth-submit-btn.guest-bar-btn {
 .guest-bar-form .form-group input:disabled {
     opacity: 0.6;
     cursor: not-allowed;
+}
+
+.guest-bar-form button.auth-submit-btn {
+    margin-top: 4px;
+    margin-bottom: 0;
+}
+
+.guest-bar-form .toggle-auth {
+    margin-top: 4px;
 }
 
 /* ── Authenticated mobile bar extras ─────────────────────────────────────── */
