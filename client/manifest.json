@@ -1,0 +1,17 @@
+{
+  "name": "fruit for all",
+  "short_name": "fruit map",
+  "description": "A community map of free street fruit.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f3e6d8",
+  "theme_color": "#7a3c20",
+  "icons": [
+    {
+      "src": "/loquat-48.png",
+      "sizes": "48x48",
+      "type": "image/png"
+    }
+  ]
+}

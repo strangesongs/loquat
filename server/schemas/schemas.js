@@ -324,59 +324,76 @@ async function createPin(pinData) {
 
 async function getAllPins(options = {}) {
   const { limit = 1000, cursor, submittedBy, bounds } = options;
-
-  let data;
-
-  if (submittedBy) {
-    // Use submittedBy-index GSI to avoid full table scan
-    const params = {
-      TableName: PINS_TABLE,
-      IndexName: 'submittedBy-index',
-      KeyConditionExpression: 'submittedBy = :user',
-      ExpressionAttributeValues: { ':user': { S: submittedBy } },
-      Limit: limit
-    };
-    if (cursor) {
-      try { params.ExclusiveStartKey = JSON.parse(Buffer.from(cursor, 'base64').toString('utf-8')); }
-      catch (err) { console.error('Invalid cursor:', err); }
+  let exclusiveStartKey = null;
+  if (cursor) {
+    try {
+      exclusiveStartKey = JSON.parse(Buffer.from(cursor, 'base64').toString('utf-8'));
+    } catch (err) {
+      console.error('Invalid cursor:', err);
     }
-    data = await client.send(new QueryCommand(params));
-  } else {
-    // Use status-index GSI — all active pins, no full table scan
+  }
+
+  const matchesBounds = (pin) => {
+    if (!bounds) return true;
+    if (!pin.coordinates) return false;
+    const { lat, lng } = pin.coordinates;
+    return lat >= bounds.minLat && lat <= bounds.maxLat &&
+           lng >= bounds.minLng && lng <= bounds.maxLng;
+  };
+
+  const makeParams = (queryLimit, startKey) => {
+    if (submittedBy) {
+      const params = {
+        TableName: PINS_TABLE,
+        IndexName: 'submittedBy-index',
+        KeyConditionExpression: 'submittedBy = :user',
+        ExpressionAttributeValues: { ':user': { S: submittedBy } },
+        Limit: queryLimit
+      };
+      if (startKey) params.ExclusiveStartKey = startKey;
+      return params;
+    }
     const params = {
       TableName: PINS_TABLE,
       IndexName: 'status-index',
       KeyConditionExpression: '#s = :active',
       ExpressionAttributeNames: { '#s': 'status' },
       ExpressionAttributeValues: { ':active': { S: 'active' } },
-      Limit: limit
+      Limit: queryLimit
     };
-    if (cursor) {
-      try { params.ExclusiveStartKey = JSON.parse(Buffer.from(cursor, 'base64').toString('utf-8')); }
-      catch (err) { console.error('Invalid cursor:', err); }
-    }
-    data = await client.send(new QueryCommand(params));
-  }
+    if (startKey) params.ExclusiveStartKey = startKey;
+    return params;
+  };
 
   try {
-    let pins = (data.Items || []).map(convertDynamoDBItem);
-
-    // Filter by bounds in application if provided
-    if (bounds) {
-      pins = pins.filter(pin => {
-        if (!pin.coordinates) return false;
-        const { lat, lng } = pin.coordinates;
-        return lat >= bounds.minLat && lat <= bounds.maxLat &&
-               lng >= bounds.minLng && lng <= bounds.maxLng;
-      });
+    if (!bounds) {
+      const data = await client.send(new QueryCommand(makeParams(limit, exclusiveStartKey)));
+      const pins = (data.Items || []).map(convertDynamoDBItem);
+      const nextCursor = data.LastEvaluatedKey
+        ? Buffer.from(JSON.stringify(data.LastEvaluatedKey)).toString('base64')
+        : null;
+      return { pins, cursor: nextCursor, hasMore: !!data.LastEvaluatedKey };
     }
 
-    let nextCursor = null;
-    if (data.LastEvaluatedKey) {
-      nextCursor = Buffer.from(JSON.stringify(data.LastEvaluatedKey)).toString('base64');
+    // For bounded map requests, keep paging until we collect enough in-bounds pins.
+    const pins = [];
+    let lastEvaluatedKey = exclusiveStartKey || null;
+    let hasMore = true;
+
+    while (pins.length < limit && hasMore) {
+      const remaining = limit - pins.length;
+      const pageLimit = Math.max(remaining, 1);
+      const page = await client.send(new QueryCommand(makeParams(pageLimit, lastEvaluatedKey)));
+      const pagePins = (page.Items || []).map(convertDynamoDBItem).filter(matchesBounds);
+      pins.push(...pagePins);
+      lastEvaluatedKey = page.LastEvaluatedKey || null;
+      hasMore = !!page.LastEvaluatedKey;
     }
 
-    return { pins, cursor: nextCursor, hasMore: !!data.LastEvaluatedKey };
+    const nextCursor = lastEvaluatedKey
+      ? Buffer.from(JSON.stringify(lastEvaluatedKey)).toString('base64')
+      : null;
+    return { pins, cursor: nextCursor, hasMore };
   } catch (err) {
     console.error('Error processing pins:', err);
     return { pins: [], cursor: null, hasMore: false };

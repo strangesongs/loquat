@@ -2,6 +2,16 @@
 
 const CACHE_PREFIX = 'ffa_cache_';
 const DEFAULT_TTL = 5 * 60 * 1000; // 5 minutes in milliseconds
+const PINS_KEY_PREFIX = 'pins_';
+
+function normalizeCoord(value) {
+  return Number(value).toFixed(6);
+}
+
+export function buildPinsCacheKey(bounds = null) {
+  if (!bounds) return 'allPins';
+  return `${PINS_KEY_PREFIX}${normalizeCoord(bounds.minLat)}_${normalizeCoord(bounds.maxLat)}_${normalizeCoord(bounds.minLng)}_${normalizeCoord(bounds.maxLng)}`;
+}
 
 /**
  * Store data in cache with timestamp
@@ -67,6 +77,19 @@ export function clearCache(key) {
     localStorage.removeItem(CACHE_PREFIX + key);
   } catch (error) {
     console.warn('Failed to clear cache:', error);
+  }
+}
+
+export function clearCachesByPrefix(prefix) {
+  try {
+    const keys = Object.keys(localStorage);
+    keys.forEach((key) => {
+      if (key.startsWith(CACHE_PREFIX + prefix)) {
+        localStorage.removeItem(key);
+      }
+    });
+  } catch (error) {
+    console.warn('Failed to clear caches by prefix:', error);
   }
 }
 

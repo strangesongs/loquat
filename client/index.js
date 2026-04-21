@@ -1,11 +1,12 @@
 
 import './stylesheets/sidebar.css';
-import './stylesheets/map.css';
-import React, { Component } from 'react';
+import React, { Component, Suspense } from 'react';
 import { createRoot } from 'react-dom/client';
 import Sidebar from './sidebar.jsx';
-import Map from './map.jsx';
 import ResetPassword from './ResetPassword.jsx';
+import { registerServiceWorker } from './registerServiceWorker.js';
+
+const Map = React.lazy(() => import('./map.jsx'));
 
 // Main App component to coordinate between Sidebar and Map
 class App extends Component {
@@ -13,7 +14,46 @@ class App extends Component {
     super(props);
     this.mapRef     = React.createRef();
     this.sidebarRef = React.createRef();
+    this.state = {
+      isPopupCollapseScreen: typeof window !== 'undefined'
+        ? window.matchMedia('(max-width: 600px)').matches
+        : false
+    };
   }
+
+  componentDidMount() {
+    if (typeof window === 'undefined') return;
+    this.popupCollapseMql = window.matchMedia('(max-width: 600px)');
+    this.syncPopupCollapseScreen();
+    if (typeof this.popupCollapseMql.addEventListener === 'function') {
+      this.popupCollapseMql.addEventListener('change', this.syncPopupCollapseScreen);
+    } else {
+      this.popupCollapseMql.addListener(this.syncPopupCollapseScreen);
+    }
+    window.addEventListener('resize', this.syncPopupCollapseScreen);
+  }
+
+  componentWillUnmount() {
+    if (typeof window !== 'undefined') {
+      window.removeEventListener('resize', this.syncPopupCollapseScreen);
+    }
+    if (!this.popupCollapseMql) return;
+    if (typeof this.popupCollapseMql.removeEventListener === 'function') {
+      this.popupCollapseMql.removeEventListener('change', this.syncPopupCollapseScreen);
+    } else {
+      this.popupCollapseMql.removeListener(this.syncPopupCollapseScreen);
+    }
+  }
+
+  syncPopupCollapseScreen = () => {
+    if (!this.popupCollapseMql) return;
+    const matches = this.popupCollapseMql.matches;
+    this.setState(prevState => (
+      prevState.isPopupCollapseScreen === matches
+        ? null
+        : { isPopupCollapseScreen: matches }
+    ));
+  };
 
   // Called when a new pin is successfully submitted
   handlePinSubmitted = () => {
@@ -52,7 +92,7 @@ class App extends Component {
 
   // Called when a pin popup is opened — collapse sidebar on narrow screens only
   handlePinOpen = () => {
-    if (this.sidebarRef.current && window.innerWidth <= 600) {
+    if (this.sidebarRef.current && this.state.isPopupCollapseScreen) {
       this.sidebarRef.current.collapse();
     }
   };
@@ -68,7 +108,9 @@ class App extends Component {
           onFilterChange={this.handleFilterChange}
           onSidebarOpen={this.handleSidebarOpen}
         />
-        <Map ref={this.mapRef} onPinOpen={this.handlePinOpen} />
+        <Suspense fallback={<div className="map-area" aria-busy="true" />}>
+          <Map ref={this.mapRef} onPinOpen={this.handlePinOpen} />
+        </Suspense>
       </div>
     );
   }
@@ -84,5 +126,7 @@ if (window.location.pathname === '/reset-password' && resetToken) {
 } else {
   root.render(<App />);
 }
+
+registerServiceWorker();
 
 

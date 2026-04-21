@@ -81,7 +81,17 @@ app.use((req, res, next) => {
 });
 
 // Serve static files from dist/ at the root FIRST
-app.use(express.static(path.join(__dirname, 'dist')));
+app.use(express.static(path.join(__dirname, 'dist'), {
+  setHeaders: (res, filePath) => {
+    if (filePath.endsWith(`${path.sep}sw.js`) || filePath.endsWith(`${path.sep}manifest.json`)) {
+      res.setHeader('Cache-Control', 'no-cache');
+      return;
+    }
+    if (filePath.endsWith(`${path.sep}index.html`)) {
+      res.setHeader('Cache-Control', 'no-cache');
+    }
+  },
+}));
 
 // NOTE: /test static route removed — it exposed project source files in production
 

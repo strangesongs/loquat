@@ -47,22 +47,26 @@ export default function PinPopup({ pin, isMyPin, isAdmin, editingPinId, editingN
                 </div>
               </div>
             ) : pin.notes ? (
-              <p 
-                className="pin-notes clickable-notes"
-                onClick={() => (isMyPin || isAdmin) && startEditingNotes(pin.pinId, pin.notes)}
-                style={{ cursor: (isMyPin || isAdmin) ? 'pointer' : 'default' }}
-                title={(isMyPin || isAdmin) ? 'Click to edit' : ''}
-              >
-                {pin.notes}
-              </p>
+              (isMyPin || isAdmin) ? (
+                <button
+                  type="button"
+                  className="pin-notes clickable-notes pin-notes-btn"
+                  onClick={() => startEditingNotes(pin.pinId, pin.notes)}
+                  title="Click to edit"
+                >
+                  {pin.notes}
+                </button>
+              ) : (
+                <p className="pin-notes">{pin.notes}</p>
+              )
             ) : (isMyPin || isAdmin) ? (
-              <p
-                className="pin-notes add-notes-prompt"
+              <button
+                type="button"
+                className="pin-notes add-notes-prompt pin-notes-btn"
                 onClick={() => startEditingNotes(pin.pinId, '')}
-                style={{ cursor: 'pointer' }}
               >
                 + add notes
-              </p>
+              </button>
             ) : null}
           </div>
         )}

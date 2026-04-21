@@ -5,7 +5,7 @@
     right: 0;
     bottom: 0;
     width: 100vw;
-    height: 100vh;
+    height: var(--app-viewport-height, 100vh);
     display: flex;
     background: #f0f0f0;
     z-index: 1;
@@ -228,14 +228,6 @@
 }
 
 .notes-section {
-@media (max-width: 360px) {
-    .leaflet-top.leaflet-right {
-        top: 12px !important;
-        right: 12px !important;
-        left: auto !important;
-        bottom: auto !important;
-    }
-}
     margin-bottom: 6px;
     padding: 5px 8px;
     background: #fafafa;
@@ -255,6 +247,25 @@
     line-height: 1.35;
     color: var(--text);
     font-style: italic;
+}
+
+.pin-notes-btn {
+    width: 100%;
+    background: transparent;
+    border: none;
+    padding: 0;
+    text-align: left;
+    font-family: inherit;
+}
+
+.pin-notes-btn:disabled {
+    cursor: default;
+}
+
+.pin-notes-btn:focus-visible {
+    outline: 2px solid var(--red);
+    outline-offset: 2px;
+    border-radius: 3px;
 }
 
 .clickable-notes {
@@ -683,6 +694,13 @@
 
 /* Jelly Star / sub-360px: move controls to top-right above bottom sheet */
 @media (max-width: 360px) {
+    .leaflet-top.leaflet-right {
+        top: 12px !important;
+        right: 12px !important;
+        left: auto !important;
+        bottom: auto !important;
+    }
+
     .locate-me-btn {
         top: 92px;
         bottom: auto;
@@ -703,7 +721,7 @@
     .pin-popup {
         min-width: 0 !important;
         width: calc(100vw - 24px);
-        max-height: 72dvh;
+        max-height: min(72dvh, calc(var(--app-viewport-height, 100vh) - 120px));
         overflow-y: auto;
     }
 }

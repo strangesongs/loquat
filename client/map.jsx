@@ -1,11 +1,12 @@
 import React, { Component } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents, ZoomControl } from 'react-leaflet';
 import { getAuthHeader, isAuthenticated, getUser, isAdmin } from './utils/auth.js';
-import { getCache, setCache, clearCache } from './utils/cache.js';
+import { getCache, setCache, clearCache, clearCachesByPrefix, buildPinsCacheKey } from './utils/cache.js';
 import { clusterPins } from './utils/clustering.js';
 import { getSeasonForZone, isInSeason, getSeasonDisplay } from './utils/fruitSeasons.js';
 import { API_BASE } from './utils/config.js';
 import { containsProfanity } from './utils/profanity.js';
+import { fetchWithRetry } from './utils/network.js';
 import L from 'leaflet';
 
 import './stylesheets/map.css';
@@ -187,6 +188,12 @@ class Map extends Component {
         this.mapRef = null; // Reference to map instance
         this.debounceTimer = null; // Timer for debouncing viewport changes
         this._blockViewportFetchUntil = 0; // ms timestamp; viewport fetches are ignored before this
+        this._requestControllers = {
+            ipLocate: null,
+            initialPins: null,
+            viewportPins: null,
+        };
+        this._etagByCacheKey = new globalThis.Map();
     }
 
     closePopups = () => {
@@ -197,12 +204,68 @@ class Map extends Component {
         this.requestIpLocation();
     }
 
+    componentWillUnmount() {
+        if (this.debounceTimer) clearTimeout(this.debounceTimer);
+        this.cancelRequest('ipLocate');
+        this.cancelRequest('initialPins');
+        this.cancelRequest('viewportPins');
+    }
+
+    cancelRequest = (requestKey) => {
+        const controller = this._requestControllers[requestKey];
+        if (controller) {
+            controller.abort();
+            this._requestControllers[requestKey] = null;
+        }
+    };
+
+    createRequestController = (requestKey) => {
+        this.cancelRequest(requestKey);
+        const controller = new AbortController();
+        this._requestControllers[requestKey] = controller;
+        return controller;
+    };
+
+    publishPinSummary = (pins) => {
+        if (typeof window === 'undefined') return;
+        const excludeWords = ['test', 'tests', 'demo', 'testing', 'user'];
+        const fruitTypes = [...new Set((pins || [])
+            .map(pin => pin.fruitType)
+            .filter(Boolean)
+            .filter(type => {
+                const lowerType = type.toLowerCase();
+                return !excludeWords.some(word => lowerType.includes(word));
+            })
+        )].sort();
+
+        window.dispatchEvent(new CustomEvent('ffa:pins-summary', {
+            detail: {
+                pinCount: (pins || []).length,
+                fruitTypes,
+                authenticated: isAuthenticated(),
+            },
+        }));
+    };
+
+    updatePinsState = (nextPins, extraState = {}) => {
+        this.setState({
+            pins: nextPins,
+            ...extraState,
+        }, () => this.publishPinSummary(nextPins));
+    };
+
     // On startup, get approximate location from the server-side IP lookup (no browser
     // permission prompt). Uses the precise location only when the user explicitly clicks
     // the locate-me button.
     requestIpLocation = async () => {
+        const controller = this.createRequestController('ipLocate');
         try {
-            const response = await fetch(`${API_BASE}/api/locate`);
+            const response = await fetchWithRetry(`${API_BASE}/api/locate`, {
+                signal: controller.signal,
+            }, {
+                timeoutMs: 7000,
+                retries: 1,
+            });
             if (response.ok) {
                 const data = await response.json();
                 if (data.lat && data.lng) {
@@ -213,7 +276,14 @@ class Map extends Component {
                     return;
                 }
             }
-        } catch (e) { /* network error — fall through */ }
+        } catch (e) {
+            if (controller.signal.aborted) return;
+            /* network error — fall through */
+        } finally {
+            if (this._requestControllers.ipLocate === controller) {
+                this._requestControllers.ipLocate = null;
+            }
+        }
         // Fall back: fetch all pins without a bounding box (map stays on default center)
         this.fetchPins();
     };
@@ -231,38 +301,40 @@ class Map extends Component {
     };
 
     fetchPins = async (forceRefresh = false, bounds = null) => {
+        const controller = this.createRequestController('initialPins');
+        const cacheKey = buildPinsCacheKey(bounds);
+
         // Fetch public pins for unauthenticated visitors
         if (!isAuthenticated()) {
             this.setState({ loading: true });
             try {
-                const response = await fetch(`${API_BASE}/api/pins/public`);
-                const data = await response.json();
-                this.setState({
-                    pins: data.success ? data.pins : [],
-                    loading: false,
-                    error: null,
+                const response = await fetchWithRetry(`${API_BASE}/api/pins/public`, {
+                    signal: controller.signal,
+                }, {
+                    timeoutMs: 9000,
+                    retries: 2,
                 });
+                const data = await response.json();
+                this.updatePinsState(data.success ? data.pins : [], { loading: false, error: null });
             } catch (err) {
-                this.setState({ pins: [], loading: false, error: null });
+                if (!controller.signal.aborted) {
+                    this.updatePinsState([], { loading: false, error: null });
+                }
+            } finally {
+                if (this._requestControllers.initialPins === controller) {
+                    this._requestControllers.initialPins = null;
+                }
             }
             return;
         }
 
         this.setState({ loading: true });
 
-        // Create cache key based on bounds if provided
-        const cacheKey = bounds 
-            ? `pins_${bounds.minLat}_${bounds.maxLat}_${bounds.minLng}_${bounds.maxLng}`
-            : 'allPins';
-
         // Check cache first (unless force refresh)
         if (!forceRefresh) {
             const cachedPins = getCache(cacheKey);
             if (cachedPins) {
-                this.setState({ 
-                    pins: cachedPins, 
-                    loading: false 
-                });
+                this.updatePinsState(cachedPins, { loading: false });
                 return;
             }
         }
@@ -273,8 +345,9 @@ class Map extends Component {
             };
 
             // Add If-None-Match header if we have an ETag
-            if (this.state.etag) {
-                headers['If-None-Match'] = this.state.etag;
+            const etagForKey = this._etagByCacheKey.get(cacheKey);
+            if (etagForKey) {
+                headers['If-None-Match'] = etagForKey;
             }
 
             // Build URL with bounds query params if provided
@@ -289,13 +362,19 @@ class Map extends Component {
                 url += `?${params.toString()}`;
             }
 
-            const response = await fetch(url, { headers });
+            const response = await fetchWithRetry(url, {
+                headers,
+                signal: controller.signal,
+            }, {
+                timeoutMs: 12000,
+                retries: 2,
+            });
 
             // Handle 304 Not Modified - use cached data
             if (response.status === 304) {
-                const cachedPins = getCache('allPins');
+                const cachedPins = getCache(cacheKey);
                 if (cachedPins) {
-                    this.setState({ loading: false });
+                    this.updatePinsState(cachedPins, { loading: false, error: null });
                     return;
                 }
             }
@@ -303,7 +382,7 @@ class Map extends Component {
             // Handle auth errors
             if (response.status === 401 || response.status === 403) {
                 console.error('[PINS] Auth error', response.status, '- re-login required');
-                this.setState({ 
+                this.setState({
                     error: 'Session expired. Please log in again.', 
                     loading: false,
                     pins: []
@@ -320,14 +399,14 @@ class Map extends Component {
             if (result.success) {
                 // Store ETag from response
                 const newEtag = response.headers.get('ETag');
+                if (newEtag) this._etagByCacheKey.set(cacheKey, newEtag);
                 
                 // Cache the pins data with bounds-based key
                 setCache(cacheKey, result.pins);
                 
-                this.setState({ 
-                    pins: result.pins, 
+                this.updatePinsState(result.pins, {
                     loading: false,
-                    etag: newEtag,
+                    etag: newEtag || null,
                     error: null
                 });
             } else {
@@ -338,17 +417,25 @@ class Map extends Component {
                 });
             }
         } catch (error) {
+            if (controller.signal.aborted) return;
             console.error('[PINS] Exception:', error);
             this.setState({ 
                 error: 'Error loading pins: ' + error.message, 
                 loading: false 
             });
+        } finally {
+            if (this._requestControllers.initialPins === controller) {
+                this._requestControllers.initialPins = null;
+            }
         }
     };
 
     // Method to refresh pins (called from parent when new pin is submitted)
     refreshPins = () => {
         clearCache('allPins');
+        clearCachesByPrefix('pins_');
+        this._etagByCacheKey.clear();
+        this.cancelRequest('viewportPins');
         this.setState({ loading: true });
         const { userLocation } = this.state;
         if (userLocation) {
@@ -373,16 +460,17 @@ class Map extends Component {
             if (Date.now() < this._blockViewportFetchUntil) return;
             if (!isAuthenticated()) return;
 
-            const cacheKey = `pins_${bounds.minLat}_${bounds.maxLat}_${bounds.minLng}_${bounds.maxLng}`;
+            const cacheKey = buildPinsCacheKey(bounds);
             const cached = getCache(cacheKey);
             if (cached) {
                 // Merge cached viewport pins into existing set
                 this.setState(prev => ({
                     pins: mergePins(prev.pins, cached)
-                }));
+                }), () => this.publishPinSummary(this.state.pins));
                 return;
             }
 
+            const controller = this.createRequestController('viewportPins');
             try {
                 const params = new URLSearchParams({
                     minLat: bounds.minLat.toFixed(6),
@@ -391,14 +479,27 @@ class Map extends Component {
                     maxLng: bounds.maxLng.toFixed(6),
                     limit: '500'
                 });
-                const response = await fetch(`${API_BASE}/api/pins?${params}`, { headers: getAuthHeader() });
+                const response = await fetchWithRetry(`${API_BASE}/api/pins?${params}`, {
+                    headers: getAuthHeader(),
+                    signal: controller.signal,
+                }, {
+                    timeoutMs: 10000,
+                    retries: 2,
+                });
                 if (!response.ok) return;
                 const result = await response.json();
                 if (result.success) {
                     setCache(cacheKey, result.pins);
-                    this.setState(prev => ({ pins: mergePins(prev.pins, result.pins) }));
+                    this.setState(prev => ({ pins: mergePins(prev.pins, result.pins) }), () => this.publishPinSummary(this.state.pins));
                 }
-            } catch (e) { /* silent — existing pins stay */ }
+            } catch (e) {
+                if (controller.signal.aborted) return;
+                /* silent — existing pins stay */
+            } finally {
+                if (this._requestControllers.viewportPins === controller) {
+                    this._requestControllers.viewportPins = null;
+                }
+            }
         }, 600);
     };
 
@@ -425,8 +526,10 @@ class Map extends Component {
                 // Optimistic update: remove from state immediately, clear cache
                 const updatedPins = this.state.pins.filter(pin => pin.pinId !== pinId);
                 clearCache('allPins');
+                clearCachesByPrefix('pins_');
+                this._etagByCacheKey.clear();
                 setCache('allPins', updatedPins);
-                this.setState({ pins: updatedPins });
+                this.updatePinsState(updatedPins);
             } else {
                 alert('Error deleting pin: ' + result.message);
             }
@@ -479,7 +582,7 @@ class Map extends Component {
                     pins: updatedPins,
                     editingPinId: null,
                     editingNotes: ''
-                });
+                }, () => this.publishPinSummary(updatedPins));
                 // Update cache
                 setCache('allPins', updatedPins);
             } else {
