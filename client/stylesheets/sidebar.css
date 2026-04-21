@@ -1300,6 +1300,13 @@ button.auth-submit-btn.guest-bar-btn {
     margin-top: 0;
 }
 
+/* About link below collapsed bar row */
+.guest-bar-about-link {
+    text-align: center;
+    padding: 0 16px 10px;
+    margin: 0;
+}
+
 /* Expanded bar */
 .guest-bar--expanded {
     max-height: 72dvh;

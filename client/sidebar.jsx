@@ -580,7 +580,7 @@ export default class Sidebar extends React.Component {
 
         const { guestAddAttempted, isLoginMode, authUserName, authPassword, authEmail,
             authLoading, authError, isForgotMode, forgotEmail, forgotLoading, forgotError, forgotSuccess,
-            pinCount, subtextIndex } = this.state;
+            pinCount, subtextIndex, showAbout } = this.state;
         const seasonLabel = this.getSeasonLabel();
         // Build the rotation array
         const subtextPhrases = [
@@ -599,6 +599,7 @@ export default class Sidebar extends React.Component {
             <div className={`guest-bar${guestAddAttempted ? ' guest-bar--expanded' : ''}`}>
 
                 {!guestAddAttempted ? (
+                    <>
                     <div className="guest-bar-body">
                         <img src={loquatIcon} className="guest-bar-icon" alt="" />
                         <div className="guest-bar-text">
@@ -610,6 +611,13 @@ export default class Sidebar extends React.Component {
                             onClick={() => this.setState({ guestAddAttempted: true, isLoginMode: true })}
                         >sign in</button>
                     </div>
+                    <p className="guest-bar-about-link">
+                        <span
+                            onClick={() => this.setState({ guestAddAttempted: true, showAbout: true })}
+                            className="secondary-link"
+                        >what is fruit for all?</span>
+                    </p>
+                    </>
                 ) : (
                     <div className="guest-bar-expanded-content">
                         <div className="guest-bar-expanded-header">
@@ -617,7 +625,19 @@ export default class Sidebar extends React.Component {
                             <p className="guest-bar-title">fruit for all</p>
                         </div>
 
-                        {isForgotMode ? (
+                        {showAbout ? (
+                            <div>
+                                <p style={{fontSize: '0.88rem', fontWeight: 600, color: 'var(--text)', margin: '0 0 10px', textAlign: 'center'}}>what is fruit for all?</p>
+                                <p style={{fontSize: '0.82rem', lineHeight: 1.55, color: 'var(--text)', margin: '0 0 8px'}}>free food is growing all around you — figs on sidewalks, citrus heavy with fruit, blackberries along the trail.</p>
+                                <p style={{fontSize: '0.82rem', lineHeight: 1.55, color: 'var(--text)', margin: '0 0 8px'}}>fruit for all maps it all so anyone can find it. spot something? add a pin.</p>
+                                <p style={{fontSize: '0.82rem', lineHeight: 1.55, color: 'var(--text)', margin: '0 0 10px'}}>only add finds genuinely accessible to anyone — nothing behind fences or on private property.</p>
+                                <p style={{fontSize: '0.75rem', color: 'var(--text-faint)', margin: '0 0 3px'}}>open source — <a href="https://github.com/strangesongs/fruit-for-all" style={{color: 'var(--red)', textDecoration: 'none'}} target="_blank" rel="noreferrer">view on github</a></p>
+                                <p style={{fontSize: '0.75rem', color: 'var(--text-faint)', margin: '0 0 12px'}}>say hello — <a href="mailto:admin@fruitforall.app" style={{color: 'var(--red)', textDecoration: 'none'}}>admin@fruitforall.app</a></p>
+                                <p className="toggle-auth">
+                                    <span onClick={() => this.setState({ showAbout: false, guestAddAttempted: false })} className="toggle-link">← back</span>
+                                </p>
+                            </div>
+                        ) : isForgotMode ? (
                             forgotSuccess ? (
                                 <div>
                                     <p className="auth-success-msg">if that email is registered, a reset link has been sent.</p>
