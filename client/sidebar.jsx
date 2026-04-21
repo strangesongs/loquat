@@ -808,7 +808,8 @@ export default class Sidebar extends React.Component {
 
     renderMobileLayout() {
         const { isCollapsed, myPinsActive, authenticated, guestAddAttempted,
-                isLoginMode, authUserName, authPassword, authEmail, authLoading, authError } = this.state;
+                isLoginMode, authUserName, authPassword, authEmail, authLoading, authError,
+                showAbout } = this.state;
         const currentUser = getUser();
 
         return (
@@ -840,8 +841,20 @@ export default class Sidebar extends React.Component {
                         <p className="mobile-panel-welcome">welcome, {currentUser.userName}!</p>
                     )}
 
-                    {/* Guest: inline auth form when "add a find" was tapped */}
-                    {!authenticated && guestAddAttempted ? (
+                    {/* Guest: about panel */}
+                    {!authenticated && showAbout ? (
+                        <div className="mobile-panel-auth">
+                            <p className="mobile-panel-auth-head">what is fruit for all?</p>
+                            <p style={{fontSize: '0.82rem', lineHeight: 1.55, color: 'var(--text)', margin: '0 0 8px'}}>free food is growing all around you — figs dropping on sidewalks, citrus heavy with fruit, blackberries along the trail.</p>
+                            <p style={{fontSize: '0.82rem', lineHeight: 1.55, color: 'var(--text)', margin: '0 0 8px'}}>fruit for all maps it all so anyone can find it. spot something? add a pin.</p>
+                            <p style={{fontSize: '0.82rem', lineHeight: 1.55, color: 'var(--text)', margin: '0 0 8px'}}>only add finds that are genuinely accessible to anyone — nothing behind fences or on private property.</p>
+                            <p style={{fontSize: '0.75rem', color: 'var(--text-faint)', margin: '0 0 4px'}}>open source — <a href="https://github.com/strangesongs/fruit-for-all" style={{color: 'var(--red)', textDecoration: 'none'}} target="_blank" rel="noreferrer">view on github</a></p>
+                            <p style={{fontSize: '0.75rem', color: 'var(--text-faint)', margin: '0 0 10px'}}>say hello — <a href="mailto:admin@fruitforall.app" style={{color: 'var(--red)', textDecoration: 'none'}}>admin@fruitforall.app</a></p>
+                            <p className="toggle-auth">
+                                <span onClick={() => this.setState({ showAbout: false })} className="toggle-link">← back</span>
+                            </p>
+                        </div>
+                    ) : !authenticated && guestAddAttempted ? (
                         <div className="mobile-panel-auth">
                             <p className="mobile-panel-auth-head">
                                 {isLoginMode ? 'sign in to add a find' : 'create account'}
@@ -919,7 +932,7 @@ export default class Sidebar extends React.Component {
                         </div>
                     )}
 
-                    {(!guestAddAttempted || authenticated) && (
+                    {(!guestAddAttempted || authenticated) && !showAbout && (
                     <div className="mobile-panel-filter">
                         <select
                             value={this.state.selectedFruitFilter}
@@ -942,6 +955,7 @@ export default class Sidebar extends React.Component {
                             logout
                         </button>
                     ) : !guestAddAttempted && (
+                        <>
                         <p className="toggle-auth" style={{marginTop: '8px', marginBottom: '2px'}}>
                             <span
                                 onClick={() => {
@@ -959,6 +973,13 @@ export default class Sidebar extends React.Component {
                                 className="toggle-link"
                             >register</span>
                         </p>
+                        <p className="toggle-auth" style={{marginBottom: '2px'}}>
+                            <span
+                                onClick={() => this.setState({ showAbout: true })}
+                                className="secondary-link"
+                            >what is fruit for all?</span>
+                        </p>
+                        </>
                     )}
                 </div>
             )}
