@@ -5,6 +5,7 @@ import { FRUIT_SEASONS } from './utils/fruitSeasons.js';
 import { FRUIT_LIST } from './utils/fruitList.js';
 import { API_BASE } from './utils/config.js';
 import { containsProfanity } from './utils/profanity.js';
+import { getTinyScreenGuestAuthState } from './utils/sidebarState.js';
 
 import './stylesheets/sidebar.css';
 
@@ -945,10 +946,18 @@ export default class Sidebar extends React.Component {
                             <span
                                 onClick={() => {
                                     sessionStorage.removeItem('ffa_guest_add_attempted');
-                                    this.setState({ guestAddAttempted: false, isLoginMode: true });
+                                    this.setState(getTinyScreenGuestAuthState('login'));
                                 }}
                                 className="toggle-link"
-                            >sign in / register</span>
+                            >sign in</span>
+                            {' / '}
+                            <span
+                                onClick={() => {
+                                    sessionStorage.removeItem('ffa_guest_add_attempted');
+                                    this.setState(getTinyScreenGuestAuthState('register'));
+                                }}
+                                className="toggle-link"
+                            >register</span>
                         </p>
                     )}
                 </div>
