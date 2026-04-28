@@ -3,32 +3,35 @@ import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents, ZoomContr
 import { getAuthHeader, isAuthenticated, getUser, isAdmin } from './utils/auth.js';
 import { getCache, setCache, clearCache, clearCachesByPrefix, buildPinsCacheKey } from './utils/cache.js';
 import { clusterPins } from './utils/clustering.js';
-import { getSeasonForZone, isInSeason, getSeasonDisplay } from './utils/fruitSeasons.js';
+import { FRUIT_SEASONS, getSeasonForZone, isInSeason, getSeasonDisplay } from './utils/fruitSeasons.js';
 import { API_BASE } from './utils/config.js';
 import { containsProfanity } from './utils/profanity.js';
 import { fetchWithRetry } from './utils/network.js';
+import { isOlderThanMonths } from './utils/timeAgo.js';
 import L from 'leaflet';
 
 import './stylesheets/map.css';
 import 'leaflet/dist/leaflet.css';
 
 // Marker icons — SVG teardrops matching the earthy palette
-const makePinIcon = (fill, stroke) => new L.DivIcon({
+const makePinIcon = (fill, stroke, opacity = 1) => new L.DivIcon({
     className: '',
-    html: `<svg xmlns="http://www.w3.org/2000/svg" width="34" height="34" viewBox="0 0 24 24" style="filter:drop-shadow(1px 2px 3px rgba(0,0,0,0.35))"><path fill="${fill}" stroke="${stroke}" stroke-width="0.8" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5S10.62 6.5 12 6.5 14.5 7.62 14.5 9 13.38 11.5 12 11.5z"/></svg>`,
+    html: `<svg xmlns="http://www.w3.org/2000/svg" width="34" height="34" viewBox="0 0 24 24" style="filter:drop-shadow(1px 2px 3px rgba(0,0,0,0.35));opacity:${opacity}"><path fill="${fill}" stroke="${stroke}" stroke-width="0.8" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5S10.62 6.5 12 6.5 14.5 7.62 14.5 9 13.38 11.5 12 11.5z"/></svg>`,
     iconSize: [34, 34],
     iconAnchor: [17, 34],
     popupAnchor: [0, -36],
 });
 
-const defaultIcon = makePinIcon('#7a3c20', '#3a1008');
-const myPinIcon  = makePinIcon('#5c6b2e', '#2a3a14');
+const defaultIcon      = makePinIcon('#7a3c20', '#3a1008');
+const dimmedDefaultIcon = makePinIcon('#7a3c20', '#3a1008', 0.55);
+const myPinIcon        = makePinIcon('#5c6b2e', '#2a3a14');
+const dimmedMyPinIcon  = makePinIcon('#5c6b2e', '#2a3a14', 0.55);
 
 const makeClusterIcon = (count) => new L.DivIcon({
     className: '',
     html: `<div style="
-        width: 28px;
-        height: 28px;
+        width: 32px;
+        height: 32px;
         background: #7a3c20;
         border-radius: 50%;
         border: 2px solid rgba(0,0,0,0.25);
@@ -41,9 +44,9 @@ const makeClusterIcon = (count) => new L.DivIcon({
         font-family: 'Vollkorn', serif;
         font-weight: bold;
     ">${count}</div>`,
-    iconSize: [28, 28],
-    iconAnchor: [14, 14],
-    popupAnchor: [0, -16],
+    iconSize: [32, 32],
+    iconAnchor: [16, 16],
+    popupAnchor: [0, -18],
 });
 
 const clusterIcon = makeClusterIcon('+');
@@ -53,6 +56,36 @@ function mergePins(existing, incoming) {
     const seen = new Set(existing.map(p => p.pinId));
     const added = incoming.filter(p => !seen.has(p.pinId));
     return added.length ? [...existing, ...added] : existing;
+}
+
+// Captures the Leaflet map instance into a mutable ref on the parent class
+function MapRefCapture({ onMap }) {
+    const map = useMap();
+    React.useEffect(() => { onMap(map); }, [map]);
+    return null;
+}
+
+// After a pan/fly completes, opens the popup on the marker at `target` coords
+function OpenPopupOnPin({ target, seq }) {
+    const map = useMap();
+    const lastSeq = React.useRef(-1);
+    React.useEffect(() => {
+        if (!target || seq === lastSeq.current) return;
+        lastSeq.current = seq;
+        const openPopup = () => {
+            map.eachLayer(layer => {
+                if (!(layer instanceof L.Marker)) return;
+                const ll = layer.getLatLng();
+                if (Math.abs(ll.lat - target.lat) < 0.000001 &&
+                    Math.abs(ll.lng - target.lng) < 0.000001) {
+                    layer.openPopup();
+                }
+            });
+        };
+        map.once('moveend', openPopup);
+        return () => map.off('moveend', openPopup);
+    }, [seq]);
+    return null;
 }
 
 // Component to fly the map to a new location (e.g. after geolocation resolves)
@@ -183,9 +216,13 @@ class Map extends Component {
             userLocation: null, // User's geolocation once resolved
             closePopupsSignal: 0, // Increment to close all open popups
             pinFlyTarget: null,  // Set to {lat, lng} to pan map to that pin
-            pinFlySeq: 0         // Increments on each pin click to reliably trigger pan
+            pinFlySeq: 0,        // Increments on each pin click to reliably trigger pan
+            spotlightPin: null,  // Coords of pin whose popup should open after pan
+            spotlightSeq: 0,     // Increments to trigger OpenPopupOnPin
         };
         this.mapRef = null; // Reference to map instance
+        this._leafletMap = null; // Live Leaflet map instance (set by MapRefCapture)
+        this._betVisited = new Set(); // Pins already shown in the current nearest-bet cycle
         this.debounceTimer = null; // Timer for debouncing viewport changes
         this._blockViewportFetchUntil = 0; // ms timestamp; viewport fetches are ignored before this
         this._requestControllers = {
@@ -202,6 +239,7 @@ class Map extends Component {
 
     componentDidMount() {
         this.requestIpLocation();
+        window.addEventListener('ffa:nearest-good-bet', this.handleNearestGoodBet);
     }
 
     componentWillUnmount() {
@@ -209,7 +247,69 @@ class Map extends Component {
         this.cancelRequest('ipLocate');
         this.cancelRequest('initialPins');
         this.cancelRequest('viewportPins');
+        window.removeEventListener('ffa:nearest-good-bet', this.handleNearestGoodBet);
     }
+
+    // Squared approximate distance — good enough for city-scale comparisons
+    _dist2 = (a, b) => {
+        const dlat = a.lat - b.lat;
+        const dlng = (a.lng - b.lng) * Math.cos(a.lat * Math.PI / 180);
+        return dlat * dlat + dlng * dlng;
+    };
+
+    // Returns candidate pins sorted nearest-first from current map center.
+    _sortedGoodBets = () => {
+        const { pins, userLocation } = this.state;
+        const month = new Date().getMonth() + 1;
+        const exclude = ['test', 'tests', 'demo', 'testing', 'user'];
+
+        const lc = this._leafletMap ? this._leafletMap.getCenter() : null;
+        const ref = lc ? { lat: lc.lat, lng: lc.lng } : userLocation;
+
+        const candidates = pins.filter(pin => {
+            if (pin.cluster || !pin.fruitType) return false;
+            const lowerType = pin.fruitType.toLowerCase();
+            if (exclude.some(w => lowerType.includes(w))) return false;
+            const data = FRUIT_SEASONS[lowerType];
+            if (!data) return false;
+            return Object.values(data.zones || {}).some(months => months.includes(month));
+        });
+
+        const pool = candidates.length > 0 ? candidates : pins.filter(pin =>
+            !pin.cluster && pin.fruitType &&
+            !exclude.some(w => pin.fruitType.toLowerCase().includes(w))
+        );
+
+        if (pool.length === 0) return [];
+        if (!ref) return pool;
+
+        return [...pool].sort((a, b) =>
+            this._dist2(ref, a.coordinates) - this._dist2(ref, b.coordinates)
+        );
+    };
+
+    handleNearestGoodBet = () => {
+        const sorted = this._sortedGoodBets();
+        if (sorted.length === 0) return;
+
+        // Skip pins already visited in this cycle; when all visited, restart.
+        const pinKey = p => `${p.coordinates.lat},${p.coordinates.lng}`;
+        let unvisited = sorted.filter(p => !this._betVisited.has(pinKey(p)));
+        if (unvisited.length === 0) {
+            this._betVisited.clear();
+            unvisited = sorted;
+        }
+
+        const pin = unvisited[0];
+        this._betVisited.add(pinKey(pin));
+
+        this.setState(prev => ({
+            pinFlyTarget: pin.coordinates,
+            pinFlySeq: prev.pinFlySeq + 1,
+            spotlightPin: pin.coordinates,
+            spotlightSeq: prev.spotlightSeq + 1,
+        }));
+    };
 
     cancelRequest = (requestKey) => {
         const controller = this._requestControllers[requestKey];
@@ -304,17 +404,30 @@ class Map extends Component {
         const controller = this.createRequestController('initialPins');
         const cacheKey = buildPinsCacheKey(bounds);
 
-        // Fetch public pins for unauthenticated visitors
+        // Fetch public pins for unauthenticated visitors (bounds + cursor match authed /api/pins, no usernames)
         if (!isAuthenticated()) {
             this.setState({ loading: true });
             try {
-                const response = await fetchWithRetry(`${API_BASE}/api/pins/public`, {
+                const params = new URLSearchParams();
+                if (bounds) {
+                    params.set('minLat', bounds.minLat.toFixed(6));
+                    params.set('maxLat', bounds.maxLat.toFixed(6));
+                    params.set('minLng', bounds.minLng.toFixed(6));
+                    params.set('maxLng', bounds.maxLng.toFixed(6));
+                    params.set('limit', '500');
+                } else {
+                    params.set('limit', '200');
+                }
+                const response = await fetchWithRetry(`${API_BASE}/api/pins/public?${params.toString()}`, {
                     signal: controller.signal,
                 }, {
                     timeoutMs: 9000,
                     retries: 2,
                 });
                 const data = await response.json();
+                if (bounds && data.success) {
+                    setCache(cacheKey, data.pins);
+                }
                 this.updatePinsState(data.success ? data.pins : [], { loading: false, error: null });
             } catch (err) {
                 if (!controller.signal.aborted) {
@@ -456,20 +569,18 @@ class Map extends Component {
     handleViewportChange = (bounds) => {
         if (this.debounceTimer) clearTimeout(this.debounceTimer);
         this.debounceTimer = setTimeout(async () => {
-            // Ignore viewport fetches during the initial fly-to animation
             if (Date.now() < this._blockViewportFetchUntil) return;
-            if (!isAuthenticated()) return;
 
             const cacheKey = buildPinsCacheKey(bounds);
             const cached = getCache(cacheKey);
             if (cached) {
-                // Merge cached viewport pins into existing set
                 this.setState(prev => ({
                     pins: mergePins(prev.pins, cached)
                 }), () => this.publishPinSummary(this.state.pins));
                 return;
             }
 
+            const authed = isAuthenticated();
             const controller = this.createRequestController('viewportPins');
             try {
                 const params = new URLSearchParams({
@@ -479,8 +590,9 @@ class Map extends Component {
                     maxLng: bounds.maxLng.toFixed(6),
                     limit: '500'
                 });
-                const response = await fetchWithRetry(`${API_BASE}/api/pins?${params}`, {
-                    headers: getAuthHeader(),
+                const path = authed ? '/api/pins' : '/api/pins/public';
+                const response = await fetchWithRetry(`${API_BASE}${path}?${params}`, {
+                    ...(authed ? { headers: getAuthHeader() } : {}),
                     signal: controller.signal,
                 }, {
                     timeoutMs: 10000,
@@ -494,7 +606,6 @@ class Map extends Component {
                 }
             } catch (e) {
                 if (controller.signal.aborted) return;
-                /* silent — existing pins stay */
             } finally {
                 if (this._requestControllers.viewportPins === controller) {
                     this._requestControllers.viewportPins = null;
@@ -625,8 +736,10 @@ class Map extends Component {
             <div className='map-area'>
                     <MapContainer center={[34.061415, -118.293991]} zoom={13} scrollWheelZoom={true} zoomControl={false}>
                         <ZoomControl position="topright" />
+                        <MapRefCapture onMap={(map) => { this._leafletMap = map; }} />
                         <MapFlyTo target={this.state.userLocation} />
                         <PanToPin target={this.state.pinFlyTarget} seq={this.state.pinFlySeq} />
+                        <OpenPopupOnPin target={this.state.spotlightPin} seq={this.state.spotlightSeq} />
                         <ClosePopupsOnCommand signal={this.state.closePopupsSignal} />
                         <LocateMeButton
                             onLocate={() => { this._blockViewportFetchUntil = Date.now() + 4000; }}
@@ -696,9 +809,10 @@ class Map extends Component {
                                 
                                 // Regular pin markers
                                 const isMyPin = currentUsername && pin.submittedBy === currentUsername;
-                                const markerIcon = isMyPin ? myPinIcon : defaultIcon;
-                                
-                                // ...existing code...
+                                const isOld = isOlderThanMonths(pin.createdAt, 6);
+                                const markerIcon = isMyPin
+                                    ? (isOld ? dimmedMyPinIcon : myPinIcon)
+                                    : (isOld ? dimmedDefaultIcon : defaultIcon);
                                 return (
                                     <Marker 
                                         position={[pin.coordinates.lat, pin.coordinates.lng]} 
