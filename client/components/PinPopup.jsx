@@ -80,6 +80,10 @@ export default function PinPopup({
         setConfirmError('too many confirmations — try again later');
         return;
       }
+      if (res.status === 409) {
+        // already confirmed from this IP — keep the optimistic confirmed state, no error
+        return;
+      }
       if (!res.ok) {
         // revert
         setConfirmations(pin.confirmations || []);
