@@ -24,3 +24,11 @@ jobs:
 
       - name: run tests
         run: npm test
+
+      - name: production build
+        run: npm run build
+
+      # Fails the step but not the job — review output and address via PRs (including Dependabot).
+      - name: npm audit (high)
+        run: npm audit --audit-level=high
+        continue-on-error: true

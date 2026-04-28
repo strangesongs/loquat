@@ -24,6 +24,15 @@ Live at **[fruitforall.app](https://fruitforall.app)** &nbsp;·&nbsp; questions?
 | Email | Resend |
 | Hosting | Railway |
 
+## documentation
+
+| Doc | What it’s for |
+|-----|----------------|
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | How the app and API fit together, DynamoDB model, PWA |
+| [docs/SECURITY.md](docs/SECURITY.md) | Reporting vulnerabilities, threat surface, operations |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | How to develop, test, and open PRs |
+| [docs/README.md](docs/README.md) | Index of all of the above |
+
 ## local setup
 
 ### prerequisites
@@ -52,8 +61,9 @@ Edit `.env`:
 NODE_ENV=development
 JWT_SECRET=        # generate: openssl rand -base64 32
 AWS_REGION=us-west-2
-DYNAMODB_TABLE=LoquatUsers
+DYNAMODB_USERS_TABLE=LoquatUsers   # legacy: DYNAMODB_TABLE is still accepted as a fallback
 PINS_TABLE=LoquatPins
+REDIS_URL=         # optional — same rate limits across all Node processes
 RESEND_API_KEY=    # optional — emails skipped if absent
 APP_URL=http://localhost:3000
 ADMIN_EMAIL=       # optional
@@ -74,8 +84,10 @@ Create two tables in the AWS console:
 
 | Table | Partition key |
 |---|---|
-| `LoquatUsers` | `userName` (String) |
-| `LoquatPins` | `pinId` (String) |
+| `LoquatUsers` | `userName` (String) — partition only |
+| `LoquatPins` | `pinId` (String) partition, `createdAt` (String) sort key — GSIs: `status-index` (`status`), `submittedBy-index` (`submittedBy`) as needed by [schemas.js](server/schemas/schemas.js) |
+
+`GET /health` returns `{ "status": "ok", "time": "…" }` for load balancers and uptime checks.
 
 ### 5. run
 
@@ -84,26 +96,29 @@ npm run dev        # client (port 3000) + server (port 8080)
 npm run build      # production build to dist/
 ```
 
+## production ops (multi-instance, tiles, cost)
+
+- **Rate limits** — In-memory by default. Set `REDIS_URL` (e.g. Upstash or Redis on Railway) so all replicas share the same per-IP counters for auth, create-pin, and public `GET /api/pins/public`.
+- **Stadia + OSM tiles** — The app uses Stadia-served tiles; traffic scales with **map drags and zooms**, not with your API. Monitor Stadia (or your tile provider) quotas and plan for a fallback or self-hosted tiles if usage grows.
+- **DynamoDB** — `getAllPins` uses **Query** on the status GSI, not a full table scan. `getPinById` uses **Query** on the `pinId` partition.
+
 ## project structure
 
 ```
 server.js
 server/
-  controllers/controllers.js
-  schemas/schemas.js
+  controllers/        # index.js, auth.js, pinsController.js
+  schemas/            # users.js, pins.js, zone.js, validation.js, errors.js, schemas.js (re-exports)
+  db/dynamo.js
+  utils/html.js, utils/profanity.js
 client/
   index.js            # esbuild entry
-  map.jsx
-  sidebar.jsx
-  splash.jsx
+  map.jsx, sidebar.jsx, …
   utils/
-    auth.js
-    fruitList.js
-    fruitSeasons.js
-    clustering.js
-    cache.js
   stylesheets/
 ```
+
+Dependency updates: see [`.github/dependabot.yml`](.github/dependabot.yml). `npm audit` is run in CI (high severity; **warn** only - see [workflow](.github/workflows/ci.yml)).
 
 ## contributing
 

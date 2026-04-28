@@ -12,6 +12,24 @@
       "src": "/loquat-48.png",
       "sizes": "48x48",
       "type": "image/png"
+    },
+    {
+      "src": "/loquat-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/loquat-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/loquat-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ]
 }

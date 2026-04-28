@@ -1,6 +1,8 @@
-const CACHE_VERSION = 'ffa-static-v1';
+// Bumped when precache list changes. Hashed entry chunks (index-*.js) are *not* listed here —
+// they are cached on first fetch via cache-first for same-origin .js
+const CACHE_VERSION = 'ffa-static-v2';
 const STATIC_CACHE = `static-${CACHE_VERSION}`;
-const APP_SHELL = ['/', '/index.html', '/index.js', '/index.css', '/manifest.json', '/loquat-48.png'];
+const APP_SHELL = ['/', '/index.html', '/manifest.json', '/loquat-48.png', '/loquat-192.png', '/loquat-512.png'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(

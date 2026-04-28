@@ -1418,3 +1418,35 @@ export function getSeasonDisplay(fruitType) {
   const fruit = FRUIT_SEASONS[fruitType.toLowerCase()];
   return fruit?.display || "Unknown season";
 }
+
+/**
+ * Get a qualitative status label for a fruit's current position in its season.
+ * Compares how many zones are producing this month vs. the surrounding months.
+ * @param {string} fruitType
+ * @param {number} month - 1-indexed current month
+ * @returns {'peak'|'early'|'late'|'steady'}
+ */
+export function getSeasonStatus(fruitType, month) {
+  const data = FRUIT_SEASONS[fruitType.toLowerCase()];
+  if (!data) return 'steady';
+
+  const zones = Object.values(data.zones || {});
+  if (zones.length === 0) return 'steady';
+
+  // Long or year-round season — no meaningful start/peak/end to call out
+  const avgMonths = zones.reduce((sum, m) => sum + m.length, 0) / zones.length;
+  if (avgMonths >= 7) return 'steady';
+
+  const prev = month === 1 ? 12 : month - 1;
+  const next = month === 12 ? 1 : month + 1;
+
+  const currentCount = zones.filter(m => m.includes(month)).length;
+  const prevCount    = zones.filter(m => m.includes(prev)).length;
+  const nextCount    = zones.filter(m => m.includes(next)).length;
+
+  // Season just opening — fewer zones were producing last month
+  if (prevCount === 0 || prevCount < currentCount * 0.6) return 'early';
+  // Season closing — fewer zones will produce next month
+  if (nextCount === 0 || nextCount < currentCount * 0.6) return 'late';
+  return 'peak';
+}

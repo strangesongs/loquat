@@ -11,7 +11,7 @@ Thanks for your interest. This is a community project and all contributions are 
 
 ## development setup
 
-See [README.md](README.md) for full setup instructions.
+See [README.md](README.md) for full setup instructions. The server is organized as `server/controllers` (HTTP: `auth.js`, `pinsController.js`, `index.js`), `server/schemas` (DynamoDB: `users.js`, `pins.js`, …), and `server/utils`. For more, see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) and [docs/SECURITY.md](docs/SECURITY.md).
 
 ## running the tests
 
@@ -28,7 +28,7 @@ If you add new utility functions, please add corresponding tests in `tests/`.
 1. Fork the repo and create a branch from `main`
 2. Run `npm run dev` to work locally
 3. Run `npm test` and make sure all tests pass
-4. Test on desktop and on narrow mobile (360px width)
+4. Test on desktop and on narrow mobile (360px width; for very small devices also try 480×854, e.g. Unihertz Jelly Star class screens)
 5. Open a PR with a clear description of what changed and why
 
 All PRs must pass CI checks and receive a review from the repo owner before merging.
