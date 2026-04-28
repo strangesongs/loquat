@@ -1,11 +1,12 @@
 import React, { Component } from 'react';
 import loquatIcon from '../loquat-48.png';
 import { getAuthHeader, getUser, clearAuth, saveAuth, isAuthenticated } from './utils/auth.js';
-import { FRUIT_SEASONS } from './utils/fruitSeasons.js';
+import { FRUIT_SEASONS, getSeasonStatus } from './utils/fruitSeasons.js';
 import { FRUIT_LIST } from './utils/fruitList.js';
 import { API_BASE } from './utils/config.js';
 import { containsProfanity } from './utils/profanity.js';
 import { getTinyScreenGuestAuthState } from './utils/sidebarState.js';
+import { buildViewTickerText } from './utils/viewTicker.js';
 import { fetchWithRetry } from './utils/network.js';
 
 import './stylesheets/sidebar.css';
@@ -81,7 +82,6 @@ export default class Sidebar extends React.Component {
         this.previousBodyOverflow = '';
         this._requestControllers = new Set();
         this.handlePinSummaryEvent = this.handlePinSummaryEvent.bind(this);
-        console.log('[Sidebar:constructor] initial showAddFruitPopup:', this.state.showAddFruitPopup);
     }
 
     syncResponsiveMode = () => {
@@ -111,28 +111,22 @@ export default class Sidebar extends React.Component {
     };
 
     componentDidMount() {
-                        if (typeof window !== 'undefined') {
-                            this._tinyScreenMql = window.matchMedia(TINY_SCREEN_QUERY);
-                            this._mobileMql = window.matchMedia(MOBILE_QUERY);
-                            if (typeof this._tinyScreenMql.addEventListener === 'function') {
-                                this._tinyScreenMql.addEventListener('change', this.syncResponsiveMode);
-                                this._mobileMql.addEventListener('change', this.syncResponsiveMode);
-                            } else {
-                                this._tinyScreenMql.addListener(this.syncResponsiveMode);
-                                this._mobileMql.addListener(this.syncResponsiveMode);
-                            }
-                            window.addEventListener('resize', this.syncResponsiveMode);
-                            this.syncResponsiveMode();
-                        }
-                        // Failsafe: always close add-find modal on mount for authenticated users
-                        if (isAuthenticated() && this.state.showAddFruitPopup) {
-                            this.setState({ showAddFruitPopup: false }, () => {
-                                console.log('[Sidebar:componentDidMount] Failsafe: closed add-find modal for authenticated user');
-                            });
-                        }
-                console.log('[Sidebar:componentDidMount] showAddFruitPopup:', this.state.showAddFruitPopup);
-            console.log('[MOUNT] sessionStorage ffa_guest_add_attempted:', sessionStorage.getItem('ffa_guest_add_attempted'));
-        // If not in a guest add flow, clear the session flag
+        if (typeof window !== 'undefined') {
+            this._tinyScreenMql = window.matchMedia(TINY_SCREEN_QUERY);
+            this._mobileMql = window.matchMedia(MOBILE_QUERY);
+            if (typeof this._tinyScreenMql.addEventListener === 'function') {
+                this._tinyScreenMql.addEventListener('change', this.syncResponsiveMode);
+                this._mobileMql.addEventListener('change', this.syncResponsiveMode);
+            } else {
+                this._tinyScreenMql.addListener(this.syncResponsiveMode);
+                this._mobileMql.addListener(this.syncResponsiveMode);
+            }
+            window.addEventListener('resize', this.syncResponsiveMode);
+            this.syncResponsiveMode();
+        }
+        if (isAuthenticated() && this.state.showAddFruitPopup) {
+            this.setState({ showAddFruitPopup: false });
+        }
         if (!this.state.guestAddAttempted && !isAuthenticated()) {
             sessionStorage.removeItem('ffa_guest_add_attempted');
         }
@@ -309,10 +303,6 @@ export default class Sidebar extends React.Component {
                 fruitType: opening ? '' : prevState.fruitType,
                 notes: opening ? '' : prevState.notes,
             };
-        }, () => {
-            if (this.state.showAddFruitPopup) {
-                console.log('[Sidebar:toggleAddFruitPopup] showAddFruitPopup set to TRUE');
-            }
         });
     };
 
@@ -583,10 +573,6 @@ export default class Sidebar extends React.Component {
                     authError: '',
                     isCollapsed: this.state.isTinyScreen,
                     showAddFruitPopup: !!wasGuestAddAttempted,
-                }, () => {
-                    if (this.state.showAddFruitPopup) {
-                        console.log('[Sidebar:handleRegister] showAddFruitPopup set to TRUE');
-                    }
                 });
                 // Notify parent to refresh pins
                 if (this.props.onAuthSuccess) {
@@ -642,6 +628,22 @@ export default class Sidebar extends React.Component {
         if (inSeason.has('apple') || inSeason.has('pear')) return 'fall harvest';
         if (inSeason.has('orange') || inSeason.has('grapefruit') || inSeason.has('tangerine')) return 'citrus season';
         return 'something is always in season';
+    };
+
+    getInSeasonFruits = () => {
+        const month = new Date().getMonth() + 1;
+        return (this.state.availableFruitTypes || [])
+            .filter(fruit => {
+                const data = FRUIT_SEASONS[fruit.toLowerCase()];
+                if (!data) return false;
+                return Object.values(data.zones || {}).some(months => months.includes(month));
+            })
+            .slice(0, 3)
+            .map(fruit => ({ name: fruit, status: getSeasonStatus(fruit, month) }));
+    };
+
+    handleNearestGoodBet = () => {
+        window.dispatchEvent(new CustomEvent('ffa:nearest-good-bet'));
     };
 
     renderAuthenticatedBar() {
@@ -727,7 +729,8 @@ export default class Sidebar extends React.Component {
 
         const { guestAddAttempted, isLoginMode, authUserName, authPassword, authEmail,
             authLoading, authError, isForgotMode, forgotEmail, forgotLoading, forgotError, forgotSuccess,
-            pinCount, subtextIndex, showAbout } = this.state;
+            pinCount, subtextIndex, showAbout, availableFruitTypes } = this.state;
+        const inSeasonFruits = this.getInSeasonFruits();
         const seasonLabel = this.getSeasonLabel();
         // Build the rotation array
         const subtextPhrases = [
@@ -752,12 +755,38 @@ export default class Sidebar extends React.Component {
                         <div className="guest-bar-text">
                             <p className="guest-bar-title">fruit for all</p>
                             <p className="guest-bar-sub" key={subtextIndex}>{subtextContent}</p>
-                            <p className="guest-bar-inline-kicker">share public fruit finds so nearby neighbors can forage.</p>
                         </div>
                         <button
                             className="auth-submit-btn guest-bar-btn"
                             onClick={() => this.setState({ guestAddAttempted: true, isLoginMode: true, showAbout: false, authError: '' })}
                         >add a find</button>
+                    </div>
+                    <div className="guest-bar-landing">
+                        <span className="guest-bar-landing-kicker">right now nearby</span>
+                        {pinCount > 0 && (
+                            <p
+                                className="guest-bar-view-ticker"
+                                key={`${pinCount}|${availableFruitTypes.join(',')}`}
+                            >
+                                <span className="guest-bar-view-label">in this view</span>
+                                {' '}
+                                {buildViewTickerText(pinCount, availableFruitTypes)}
+                            </p>
+                        )}
+                        {inSeasonFruits.length > 0 && (
+                            <div className="guest-bar-chips">
+                                {inSeasonFruits.map(fruit => (
+                                    <span key={fruit.name} className="guest-bar-chip">
+                                        <i className={`guest-bar-chip-dot guest-bar-chip-dot--${fruit.status === 'peak' || fruit.status === 'steady' ? 'green' : 'amber'}`} aria-hidden="true" />
+                                        {fruit.name} {fruit.status}
+                                    </span>
+                                ))}
+                            </div>
+                        )}
+                        <button type="button" className="guest-bar-bet-btn" onClick={this.handleNearestGoodBet}>
+                            nearest good bet →
+                        </button>
+                        <p className="guest-bar-orchard">open source orchard, neighbor-submitted finds</p>
                     </div>
                     <p className="guest-bar-about-link guest-bar-links-row">
                         <button
@@ -1010,8 +1039,10 @@ export default class Sidebar extends React.Component {
     renderMobileLayout() {
         const { isCollapsed, myPinsActive, authenticated, guestAddAttempted,
                 isLoginMode, authUserName, authPassword, authEmail, authLoading, authError,
-                showAbout, isForgotMode, forgotEmail, forgotLoading, forgotError, forgotSuccess } = this.state;
+                showAbout, isForgotMode, forgotEmail, forgotLoading, forgotError, forgotSuccess,
+                pinCount } = this.state;
         const currentUser = getUser();
+        const inSeasonFruits = this.getInSeasonFruits();
 
         return (
             <>
@@ -1040,6 +1071,12 @@ export default class Sidebar extends React.Component {
 
                     {authenticated && currentUser && (
                         <p className="mobile-panel-welcome">welcome, {currentUser.userName}!</p>
+                    )}
+
+                    {!authenticated && !guestAddAttempted && !showAbout && pinCount > 0 && (
+                        <p className="mobile-panel-count">
+                            {pinCount} {pinCount === 1 ? 'find' : 'finds'} in view
+                        </p>
                     )}
 
                     {/* Guest: about panel */}

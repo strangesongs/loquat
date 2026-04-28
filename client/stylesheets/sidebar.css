@@ -87,7 +87,7 @@ html, body {
     width: 100%;
 }
 
-button:not(.hamburger-btn):not(.mobile-fab):not(.mobile-panel-btn):not(.auth-submit-btn):not(.toggle-link):not(.secondary-link):not(.fruit-suggestion-btn), .action-btn {
+button:not(.hamburger-btn):not(.mobile-fab):not(.mobile-panel-btn):not(.auth-submit-btn):not(.toggle-link):not(.secondary-link):not(.fruit-suggestion-btn):not(.guest-bar-bet-btn):not(.still-good-btn), .action-btn {
     background-color: var(--red);
     color: white;
     padding: 10px 14px;
@@ -96,8 +96,8 @@ button:not(.hamburger-btn):not(.mobile-fab):not(.mobile-panel-btn):not(.auth-sub
     font-family: inherit;
     font-size: 0.9rem;
     font-weight: normal;
-    border: 2px outset var(--red);
-    border-radius: 4px;
+    border: 1px solid rgba(0,0,0,0.15);
+    border-radius: 5px;
     cursor: pointer;
     width: 90%;
     box-sizing: border-box;
@@ -105,20 +105,24 @@ button:not(.hamburger-btn):not(.mobile-fab):not(.mobile-panel-btn):not(.auth-sub
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    transition: background-color 0.2s ease;
+    box-shadow: 0 2px 0 rgba(0,0,0,0.18), 0 1px 3px rgba(0,0,0,0.08);
+    transition: background 0.15s, box-shadow 0.1s, transform 0.1s;
 }
 
-button:not(.hamburger-btn):not(.mobile-fab):not(.mobile-panel-btn):not(.auth-submit-btn):not(.toggle-link):not(.secondary-link):not(.fruit-suggestion-btn):hover, .action-btn:hover {
+button:not(.hamburger-btn):not(.mobile-fab):not(.mobile-panel-btn):not(.auth-submit-btn):not(.toggle-link):not(.secondary-link):not(.fruit-suggestion-btn):not(.still-good-btn):hover, .action-btn:hover {
     background-color: var(--red-dark);
+    box-shadow: 0 3px 0 rgba(0,0,0,0.22), 0 1px 4px rgba(0,0,0,0.1);
 }
 
-button:not(.hamburger-btn):not(.mobile-fab):not(.mobile-panel-btn):not(.auth-submit-btn):not(.toggle-link):not(.secondary-link):not(.fruit-suggestion-btn):active, .action-btn:active {
-    border: 2px inset var(--red);
+button:not(.hamburger-btn):not(.mobile-fab):not(.mobile-panel-btn):not(.auth-submit-btn):not(.toggle-link):not(.secondary-link):not(.fruit-suggestion-btn):not(.still-good-btn):active, .action-btn:active {
+    box-shadow: none;
+    transform: translateY(2px);
 }
 
 .btn-active {
     background-color: var(--red-deep) !important;
-    border: 2px inset var(--red) !important;
+    box-shadow: none !important;
+    transform: translateY(1px) !important;
 }
 
 .add-fruit-btn {
@@ -264,19 +268,23 @@ button.auth-submit-btn {
     font-size: 0.9rem;
     background-color: var(--red);
     color: white;
-    border: 2px outset var(--red);
-    border-radius: 4px;
+    border: 1px solid rgba(0,0,0,0.15);
+    border-radius: 5px;
     cursor: pointer;
     font-weight: normal;
     display: block;
+    box-shadow: 0 2px 0 rgba(0,0,0,0.18), 0 1px 3px rgba(0,0,0,0.08);
+    transition: background 0.15s, box-shadow 0.1s, transform 0.1s;
 }
 
 button.auth-submit-btn:hover {
     background-color: var(--red-dark);
+    box-shadow: 0 3px 0 rgba(0,0,0,0.22), 0 1px 4px rgba(0,0,0,0.1);
 }
 
 button.auth-submit-btn:active {
-    border: 2px inset var(--red);
+    box-shadow: none;
+    transform: translateY(2px);
 }
 
 button.auth-submit-btn:disabled {
@@ -953,7 +961,7 @@ button.close-btn:hover {
         font-size: 0.8rem;
     }
     
-    button:not(.hamburger-btn):not(.mobile-fab):not(.mobile-panel-btn):not(.auth-submit-btn):not(.toggle-link):not(.secondary-link):not(.fruit-suggestion-btn), .action-btn {
+    button:not(.hamburger-btn):not(.mobile-fab):not(.mobile-panel-btn):not(.auth-submit-btn):not(.toggle-link):not(.secondary-link):not(.fruit-suggestion-btn):not(.guest-bar-bet-btn):not(.still-good-btn), .action-btn {
         font-size: 0.8rem;
         padding: 6px 10px;
     }
@@ -1125,7 +1133,7 @@ button.close-btn:hover {
         padding: 7px 10px;
     }
 
-    button:not(.hamburger-btn):not(.mobile-fab):not(.mobile-panel-btn):not(.auth-submit-btn):not(.toggle-link):not(.secondary-link):not(.fruit-suggestion-btn), .action-btn {
+    button:not(.hamburger-btn):not(.mobile-fab):not(.mobile-panel-btn):not(.auth-submit-btn):not(.toggle-link):not(.secondary-link):not(.fruit-suggestion-btn):not(.guest-bar-bet-btn):not(.still-good-btn), .action-btn {
         font-size: 0.75rem;
         padding: 6px 8px;
     }
@@ -1266,8 +1274,8 @@ button.close-btn:hover {
     flex: 1;
     background: var(--red);
     color: white;
-    border: 2px outset var(--red);
-    border-radius: 4px;
+    border: 1px solid rgba(0,0,0,0.15);
+    border-radius: 5px;
     padding: 8px 6px;
     font-family: var(--font);
     font-size: 0.8rem;
@@ -1276,14 +1284,18 @@ button.close-btn:hover {
     white-space: nowrap;
     box-sizing: border-box;
     margin: 0;
+    box-shadow: 0 2px 0 rgba(0,0,0,0.18), 0 1px 3px rgba(0,0,0,0.08);
+    transition: background 0.15s, box-shadow 0.1s, transform 0.1s;
 }
 
 .mobile-panel-btn:hover {
     background: var(--red-dark);
+    box-shadow: 0 3px 0 rgba(0,0,0,0.22), 0 1px 4px rgba(0,0,0,0.1);
 }
 
 .mobile-panel-btn:active {
-    border: 2px inset var(--red);
+    box-shadow: none;
+    transform: translateY(2px);
 }
 
 .mobile-panel-filter {
@@ -1553,4 +1565,132 @@ button.auth-bar-action-btn.btn-active {
 
 .auth-bar-filter {
     margin-bottom: 10px;
+}
+
+/* ── Guest bar landing card ──────────────────────────────────────────────── */
+
+.guest-bar-landing {
+    padding: 0 16px 6px;
+}
+
+.guest-bar-landing-kicker {
+    color: var(--text-muted);
+    display: block;
+    font-family: var(--font);
+    font-size: 0.65rem;
+    letter-spacing: 0.12em;
+    margin-bottom: 2px;
+    text-transform: uppercase;
+}
+
+.guest-bar-landing-count {
+    color: var(--red-dark);
+    font-size: 0.88rem;
+    font-weight: 600;
+    line-height: 1.2;
+    margin: 0 0 7px;
+}
+
+.guest-bar-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-bottom: 8px;
+}
+
+.guest-bar-chip {
+    align-items: center;
+    background: rgba(247, 242, 228, 0.92);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    color: var(--text);
+    display: inline-flex;
+    font-family: var(--font);
+    font-size: 0.72rem;
+    gap: 5px;
+    padding: 3px 7px;
+    white-space: nowrap;
+}
+
+.guest-bar-chip-dot {
+    border-radius: 50%;
+    display: inline-block;
+    flex-shrink: 0;
+    height: 6px;
+    width: 6px;
+}
+
+.guest-bar-chip-dot--green { background: var(--olive); }
+.guest-bar-chip-dot--amber { background: #b88a20; }
+
+button.guest-bar-bet-btn {
+    background: var(--olive);
+    border: 1px solid rgba(0,0,0,0.15);
+    border-radius: 5px;
+    box-sizing: border-box;
+    color: white;
+    cursor: pointer;
+    display: block;
+    font-family: var(--font);
+    font-size: 0.88rem;
+    font-weight: normal;
+    margin: 0 0 2px;
+    padding: 9px 12px;
+    text-align: center;
+    width: 100%;
+    box-shadow: 0 2px 0 rgba(0,0,0,0.18), 0 1px 3px rgba(0,0,0,0.08);
+    transition: background 0.15s, box-shadow 0.1s, transform 0.1s;
+}
+
+button.guest-bar-bet-btn:hover  {
+    background: var(--del);
+    box-shadow: 0 3px 0 rgba(0,0,0,0.22), 0 1px 4px rgba(0,0,0,0.1);
+}
+button.guest-bar-bet-btn:active {
+    box-shadow: none;
+    transform: translateY(2px);
+}
+
+.guest-bar-orchard {
+    color: var(--text-muted);
+    font-size: 0.72rem;
+    font-style: italic;
+    margin: 5px 0 8px;
+    text-align: center;
+}
+
+/* ── Jelly Star compact count stat ───────────────────────────────────────── */
+
+.mobile-panel-count {
+    color: var(--red-dark);
+    font-size: 0.8rem;
+    font-weight: 600;
+    line-height: 1.2;
+    margin: 0 0 8px;
+}
+
+/* ── "in this view" live viewport ticker (standard mobile guest bar) ─────── */
+
+.guest-bar-view-ticker {
+    color: var(--red-dark);
+    font-size: 0.88rem;
+    font-weight: 600;
+    line-height: 1.3;
+    margin: 0 0 7px;
+    animation: viewTickerFade 0.45s ease;
+}
+
+.guest-bar-view-label {
+    color: var(--text-muted);
+    font-size: 0.68rem;
+    font-style: italic;
+    font-weight: 400;
+    letter-spacing: 0.02em;
+    margin-right: 2px;
+    text-transform: lowercase;
+}
+
+@keyframes viewTickerFade {
+    from { opacity: 0.2; transform: translateY(1px); }
+    to   { opacity: 1;   transform: translateY(0); }
 }
